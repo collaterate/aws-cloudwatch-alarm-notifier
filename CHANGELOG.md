@@ -1,3 +1,9 @@
+## v0.2.3 (2023-11-14)
+
+### Fix
+
+- load secrets from secrets manager instead of systems manager parameter store
+
 ## v0.2.2 (2023-11-13)
 
 ### Fix
