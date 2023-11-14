@@ -40,7 +40,7 @@ class BuildPipelineStack(aws_cdk.Stack):
                     "asdf install",
                     "npm i",
                     "poetry config http-basic.tbg aws $(aws codeartifact get-authorization-token --duration-seconds 3600 --domain tbg --domain-owner 538493872512 --query authorizationToken --output text)",
-                    "poetry install",
+                    "poetry install --no-root --without=dev",
                     "npx cdk --context codeartifact_authorization_token=`aws codeartifact get-authorization-token --duration-seconds 3600 --domain tbg --domain-owner 538493872512 --query authorizationToken --output text` synth",
                 ],
                 input=pipelines.CodePipelineSource.connection(
