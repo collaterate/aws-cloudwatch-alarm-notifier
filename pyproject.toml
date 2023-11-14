@@ -8,7 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.11"
 aws-cdk-lib = "^2.104.0"
-tbg-cdk-python = "^7.0.5"
+tbg-cdk-python = "^8.0.0"
 tbg-cdk-nag = "^7.0.2"
 
 

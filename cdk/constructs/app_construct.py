@@ -13,6 +13,7 @@ from aws_cdk import (
     aws_sns,
     aws_logs,
     aws_lambda_event_sources,
+    aws_ecr_assets,
 )
 from tbg_cdk import tbg_constructs
 
@@ -261,17 +262,19 @@ class AppConstruct(constructs.Construct):
             scope=self,
             id="AlarmNotifier",
             function_props=aws_lambda.FunctionProps(
-                architecture=aws_lambda.Architecture.X86_64,
                 code=aws_lambda.Code.from_docker_build(
                     path=".",
                     build_args={
                         "CODEARTIFACT_AUTHORIZATION_TOKEN": self.node.try_get_context(
-                            "codeartifact-authorization-token"
+                            "codeartifact_authorization_token"
                         ),
-                        "POETRY_INSTALL_ARGS": "--only=alarm_notifier",
+                        "POETRY_INSTALL_ARGS": "--only=handler",
                     },
                     file="Dockerfile.alarm_notifier",
                 ),
+                handler="alarm_notifier.lambda_handler.handler",
+                runtime=aws_lambda.Runtime.PYTHON_3_11,
+                architecture=aws_lambda.Architecture.X86_64,
                 description="Sends CloudWatch Alarm notification to Slack channels.",
                 environment_encryption=self.key,
                 environment={
@@ -282,10 +285,8 @@ class AppConstruct(constructs.Construct):
                     "SLACK_OAUTH_TOKEN_SECRET_NAME": self.alarm_notification_slack_oauth_secret.parameter_name,
                 },
                 function_name=namer.get_name("Function"),
-                handler="alarm_notifier.lambda_handler.handler",
                 insights_version=aws_lambda.LambdaInsightsVersion.VERSION_1_0_229_0,
                 role=self.alarm_notifier_role.without_policy_updates(),
-                runtime=aws_lambda.Runtime.PYTHON_3_11,
                 security_groups=[self.alarm_notification_function_security_group],
                 vpc=vpc,
                 vpc_subnets=aws_ec2.SubnetSelection(
