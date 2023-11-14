@@ -1,3 +1,9 @@
+## v0.2.2 (2023-11-13)
+
+### Fix
+
+- modify poetry install to not include dev dependencies and not install the root package
+
 ## v0.2.1 (2023-11-13)
 
 ### Fix
