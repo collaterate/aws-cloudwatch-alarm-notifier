@@ -1,3 +1,9 @@
+## v0.2.6 (2023-11-14)
+
+### Fix
+
+- remove duplicate permission that was causing a circular dependency
+
 ## v0.2.5 (2023-11-14)
 
 ### Fix
