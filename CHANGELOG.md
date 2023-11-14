@@ -1,3 +1,9 @@
+## v0.2.5 (2023-11-14)
+
+### Fix
+
+- toggle feature flag to prevent circular dependency with the kms key and the sns topic
+
 ## v0.2.4 (2023-11-14)
 
 ### Fix
