@@ -1,3 +1,9 @@
+## v0.2.4 (2023-11-14)
+
+### Fix
+
+- fix incorrect property access
+
 ## v0.2.3 (2023-11-14)
 
 ### Fix
