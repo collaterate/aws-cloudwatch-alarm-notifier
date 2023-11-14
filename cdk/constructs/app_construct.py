@@ -14,6 +14,7 @@ from aws_cdk import (
     aws_logs,
     aws_lambda_event_sources,
     aws_ecr_assets,
+    aws_secretsmanager,
 )
 from tbg_cdk import tbg_constructs
 
@@ -231,23 +232,23 @@ class AppConstruct(constructs.Construct):
             self.alarm_notifier_function_execution_managed_policy
         )
 
-        self.alarm_notification_sentry_dsn_parameter = (
-            aws_ssm.StringParameter.from_string_parameter_name(
+        self.alarm_notification_sentry_dsn_secret = (
+            aws_secretsmanager.Secret.from_secret_name_v2(
                 scope=self,
                 id="AlarmNotificationSentryProjectSecret",
-                string_parameter_name=sentry_dsn_secret_name,
+                secret_name=sentry_dsn_secret_name,
             )
         )
 
-        self.alarm_notification_sentry_dsn_parameter.grant_read(
+        self.alarm_notification_sentry_dsn_secret.grant_read(
             self.alarm_notifier_function_execution_managed_policy
         )
 
         self.alarm_notification_slack_oauth_secret = (
-            aws_ssm.StringParameter.from_string_parameter_name(
+            aws_secretsmanager.Secret.from_secret_name_v2(
                 scope=self,
                 id="AlarmNotificationSlackOauthParameter",
-                string_parameter_name=slack_alarm_notifier_oauth_token_secret_name,
+                secret_name=slack_alarm_notifier_oauth_token_secret_name,
             )
         )
 
@@ -280,7 +281,7 @@ class AppConstruct(constructs.Construct):
                 environment={
                     "IDEMPOTENCY_TABLE_NAME_SSM_PARAMETER_NAME": self.alarm_notification_idempotency_table_name_parameter.parameter_name,
                     "ALARM_SLACK_CHANNELS_DYNAMODB_TABLE_SSM_PARAMETER_NAME": self.alarm_notification_slack_channels_table_name_parameter.parameter_name,
-                    "SENTRY_DSN_SECRET_NAME": self.alarm_notification_sentry_dsn_parameter.parameter_name,
+                    "SENTRY_DSN_SECRET_NAME": self.alarm_notification_sentry_dsn_secret.secret_name,
                     "SENTRY_ENV_SSM_PARAMETER_NAME": self.alarm_notification_sentry_env_parameter.parameter_name,
                     "SLACK_OAUTH_TOKEN_SECRET_NAME": self.alarm_notification_slack_oauth_secret.parameter_name,
                 },
