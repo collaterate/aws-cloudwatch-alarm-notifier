@@ -1,0 +1,30 @@
+ARG PYTHON_VERSION=3.11
+
+FROM public.ecr.aws/sam/build-python$PYTHON_VERSION
+
+ARG CODE_PATH=./alarm_notifier
+ARG CODEARTIFACT_AUTHORIZATION_TOKEN
+ARG POETRY_INSTALL_ARGS="--only main"
+ARG POETRY_VERSION=1.6.1
+
+ENV PATH="$PATH:/root/.local/bin"
+
+ENV POETRY_VERSION=$POETRY_VERSION
+
+RUN curl -sSL https://install.python-poetry.org | python3 - && \
+    poetry config virtualenvs.in-project true && \
+    poetry config virtualenvs.options.always-copy true && \
+    poetry config virtualenvs.options.no-pip true && \
+    poetry config virtualenvs.options.no-setuptools true
+
+COPY pyproject.toml .
+COPY poetry.lock .
+
+RUN mkdir -p /asset && \
+    python -m venv .venv && \
+    source .venv/bin/activate && \
+    poetry config http-basic.tbg aws $CODEARTIFACT_AUTHORIZATION_TOKEN && \
+    poetry install $POETRY_INSTALL_ARGS && \
+    poetry run python -c "import sys;import json;print(json.dumps(sys.path))" | jq '.[] | select((contains("/var/lang/lib/") | not) and (. != "")) + "/"' | xargs -I{} cp -rT {} /asset
+
+COPY ${CODE_PATH} /asset/${CODE_PATH}

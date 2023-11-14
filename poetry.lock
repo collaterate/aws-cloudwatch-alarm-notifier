@@ -1136,20 +1136,20 @@ reference = "tbg"
 
 [[package]]
 name = "tbg-cdk-python"
-version = "7.0.5"
+version = "8.0.0"
 description = "TBG CDK supplimental libraries"
 optional = false
 python-versions = "~=3.7"
 files = [
-    {file = "tbg-cdk-python-7.0.5.tar.gz", hash = "sha256:1b43f8f2810275b4b2a98550c22cbfbbfad4e0d96b20b93699b244fae2f27b38"},
-    {file = "tbg_cdk_python-7.0.5-py3-none-any.whl", hash = "sha256:27b5139eb7b4f0392b68e41faa9bfcdd70ee7cfbe0fbc4a6e8bdf676c6af5531"},
+    {file = "tbg-cdk-python-8.0.0.tar.gz", hash = "sha256:5a7b8e408c6243718cf96fa1a443c0ebdbefd98ed11fa0af25b754ff90fd0768"},
+    {file = "tbg_cdk_python-8.0.0-py3-none-any.whl", hash = "sha256:4d8ac963afa2577522e6326e917f78e2c58b36d434c78d75c5d2245333001abe"},
 ]
 
 [package.dependencies]
-aws-cdk-lib = ">=2.102.0,<3.0.0"
-cdk-nag = ">=2.27.167,<3.0.0"
+aws-cdk-lib = ">=2.104.0,<3.0.0"
+cdk-nag = ">=2.27.180,<3.0.0"
 constructs = ">=10.3.0,<11.0.0"
-jsii = ">=1.80.0,<2.0.0"
+jsii = ">=1.91.0,<2.0.0"
 publication = ">=0.0.3"
 typeguard = ">=2.13.3,<2.14.0"
 
@@ -1379,4 +1379,4 @@ reference = "tbg"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "6dc677c5b520b297b110bb7e34710fccefc67f5963b4dc955696105a39d24f43"
+content-hash = "0b2026c8a98893f4d061433f9fb62e68a5e59893a3d657c2f063d8701ded477b"

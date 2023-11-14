@@ -6,13 +6,16 @@ from aws_cdk import aws_ec2
 import cdk.constructs.app_construct
 
 
-class ProdStack(aws_cdk.Stack):
+class ApplicationStack(aws_cdk.Stack):
     def __init__(
         self,
         scope: constructs.Construct,
         id: str,
         *,
         namer: tbg_cdk.IResourceNamer,
+        sentry_dsn_secret_name: str,
+        sentry_env: str,
+        slack_alarm_notifier_oauth_token_secret_name: str,
         **kwargs
     ):
         super().__init__(scope=scope, id=id, **kwargs)
@@ -25,8 +28,8 @@ class ProdStack(aws_cdk.Stack):
             scope=self,
             id="App",
             namer=namer.with_prefix("App"),
-            sentry_dsn_secret_name="Sentry/IntegrationApiDelivery/Dsn",
-            sentry_env="prod",
-            slack_alarm_notifier_oauth_token_secret_name="Slack/AWSCloudWatchAlarmNotifier/OAuthToken",
+            sentry_dsn_secret_name=sentry_dsn_secret_name,
+            sentry_env=sentry_env,
+            slack_alarm_notifier_oauth_token_secret_name=slack_alarm_notifier_oauth_token_secret_name,
             vpc=vpc,
         )
