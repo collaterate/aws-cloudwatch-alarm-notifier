@@ -332,7 +332,3 @@ class AppConstruct(constructs.Construct):
         self.alarm_notifier.queue.grant_consume_messages(
             self.alarm_notifier_function_execution_managed_policy
         )
-
-        self.alarm_notifier.log_group.grant_write(
-            self.alarm_notifier_function_execution_managed_policy
-        )
