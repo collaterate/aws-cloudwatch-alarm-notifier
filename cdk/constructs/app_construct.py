@@ -283,7 +283,7 @@ class AppConstruct(constructs.Construct):
                     "ALARM_SLACK_CHANNELS_DYNAMODB_TABLE_SSM_PARAMETER_NAME": self.alarm_notification_slack_channels_table_name_parameter.parameter_name,
                     "SENTRY_DSN_SECRET_NAME": self.alarm_notification_sentry_dsn_secret.secret_name,
                     "SENTRY_ENV_SSM_PARAMETER_NAME": self.alarm_notification_sentry_env_parameter.parameter_name,
-                    "SLACK_OAUTH_TOKEN_SECRET_NAME": self.alarm_notification_slack_oauth_secret.parameter_name,
+                    "SLACK_OAUTH_TOKEN_SECRET_NAME": self.alarm_notification_slack_oauth_secret.secret_name,
                 },
                 function_name=namer.get_name("Function"),
                 insights_version=aws_lambda.LambdaInsightsVersion.VERSION_1_0_229_0,
