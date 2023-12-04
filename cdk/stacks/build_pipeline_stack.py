@@ -38,6 +38,7 @@ class BuildPipelineStack(aws_cdk.Stack):
                     "asdf plugin add nodejs",
                     "asdf plugin add poetry",
                     "asdf plugin add python",
+                    "asdf plugin add awscli",
                     "asdf install",
                     "npm i",
                     "poetry config http-basic.tbg aws $(aws codeartifact get-authorization-token --duration-seconds 3600 --domain tbg --domain-owner 538493872512 --query authorizationToken --output text)",
