@@ -1,3 +1,10 @@
+## v0.2.7 (2023-12-04)
+
+### Fix
+
+- move lambda code bundling to top level to prevent duplicate creations
+- fix package name
+
 ## v0.2.6 (2023-11-14)
 
 ### Fix
