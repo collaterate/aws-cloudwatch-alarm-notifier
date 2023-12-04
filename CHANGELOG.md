@@ -1,3 +1,9 @@
+## v0.2.8 (2023-12-04)
+
+### Fix
+
+- add missing awscli plugin for asdf
+
 ## v0.2.7 (2023-12-04)
 
 ### Fix
