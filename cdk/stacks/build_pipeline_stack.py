@@ -1,7 +1,7 @@
 import aws_cdk
 import constructs
 import tbg_cdk
-from aws_cdk import pipelines, aws_iam, aws_codestarconnections
+from aws_cdk import pipelines, aws_iam, aws_codestarconnections, aws_lambda
 
 import cdk.stages.dev_stage
 
@@ -12,6 +12,7 @@ class BuildPipelineStack(aws_cdk.Stack):
         scope: constructs.Construct,
         id: str,
         *,
+        alarm_notifier_code: aws_lambda.AssetCode,
         namer: tbg_cdk.IResourceNamer,
         **kwargs
     ):
@@ -91,6 +92,7 @@ class BuildPipelineStack(aws_cdk.Stack):
             stage=cdk.stages.dev_stage.DevStage(
                 scope=self,
                 id="DevStage",
+                alarm_notifier_code=alarm_notifier_code,
                 env=aws_cdk.Environment(account="800572224722", region="us-east-1"),
                 stage_name=namer.get_name("DevStage"),
             ),
