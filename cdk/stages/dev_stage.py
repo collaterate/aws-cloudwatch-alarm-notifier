@@ -5,12 +5,13 @@ import cdk_nag
 import constructs
 import tbg_cdk
 import tbg_cdk_nag
+from aws_cdk import aws_lambda
 
 import cdk.stacks.application_stack
 
 
 class DevStage(aws_cdk.Stage):
-    def __init__(self, scope: constructs.Construct, id: str, **kwargs):
+    def __init__(self, scope: constructs.Construct, id: str, *, alarm_notifier_code: aws_lambda.Code, **kwargs):
         super().__init__(scope=scope, id=id, **kwargs)
 
         namer = tbg_cdk.ResourceNamer(["Dev", "Prv", "UE1"])
@@ -18,6 +19,7 @@ class DevStage(aws_cdk.Stage):
         self.stack = cdk.stacks.application_stack.ApplicationStack(
             scope=self,
             id="AlarmNotifier",
+            alarm_notifier_code=alarm_notifier_code,
             namer=namer.with_prefix("AlarmNotifier"),
             sentry_dsn_secret_name="/Sentry/AlarmNotifier/Dsn",
             sentry_env="dev",
