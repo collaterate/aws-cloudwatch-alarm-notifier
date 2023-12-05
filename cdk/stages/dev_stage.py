@@ -11,10 +11,21 @@ import cdk.stacks.application_stack
 
 
 class DevStage(aws_cdk.Stage):
-    def __init__(self, scope: constructs.Construct, id: str, *, alarm_notifier_code: aws_lambda.Code, **kwargs):
+    def __init__(self, scope: constructs.Construct, id: str, **kwargs):
         super().__init__(scope=scope, id=id, **kwargs)
 
         namer = tbg_cdk.ResourceNamer(["Dev", "Prv", "UE1"])
+
+        alarm_notifier_code = aws_lambda.Code.from_docker_build(
+            path=".",
+            build_args={
+                "CODEARTIFACT_AUTHORIZATION_TOKEN": self.node.try_get_context(
+                    "codeartifact_authorization_token"
+                ),
+                "POETRY_INSTALL_ARGS": "--only=handler",
+            },
+            file="Dockerfile.alarm_notifier",
+        )
 
         self.stack = cdk.stacks.application_stack.ApplicationStack(
             scope=self,

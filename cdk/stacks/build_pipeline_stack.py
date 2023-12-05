@@ -17,17 +17,6 @@ class BuildPipelineStack(aws_cdk.Stack):
     ):
         super().__init__(scope=scope, id=id, **kwargs)
 
-        alarm_notifier_code = aws_lambda.Code.from_docker_build(
-            path=".",
-            build_args={
-                "CODEARTIFACT_AUTHORIZATION_TOKEN": self.node.try_get_context(
-                    "codeartifact_authorization_token"
-                ),
-                "POETRY_INSTALL_ARGS": "--only=handler",
-            },
-            file="Dockerfile.alarm_notifier",
-        )
-
         self.github_connection = aws_codestarconnections.CfnConnection(
             scope=self,
             id="AlarmNotifierGitHubConnection",
@@ -104,7 +93,6 @@ class BuildPipelineStack(aws_cdk.Stack):
             stage=cdk.stages.dev_stage.DevStage(
                 scope=self,
                 id="DevStage",
-                alarm_notifier_code=alarm_notifier_code,
                 env=aws_cdk.Environment(account="800572224722", region="us-east-1"),
                 stage_name=namer.get_name("DevStage"),
             ),
