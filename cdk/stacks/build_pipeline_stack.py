@@ -20,7 +20,7 @@ class BuildPipelineStack(aws_cdk.Stack):
 
         self.github_connection = aws_codestarconnections.CfnConnection(
             scope=self,
-            id="AlarmNotifierConnectionToGitHub",
+            id="AlarmNotifierGitHubConnection",
             connection_name="AlarmNotifierGitHubConnection",
             provider_type="GitHub",
         )
@@ -28,7 +28,7 @@ class BuildPipelineStack(aws_cdk.Stack):
         self.pipeline = pipelines.CodePipeline(
             scope=self,
             id="DevPipeline",
-            pipeline_name=namer.get_name("AwsAlarmNotifier"),
+            pipeline_name=namer.get_name("AwsAlarmNotifierDevPipeline"),
             synth=pipelines.ShellStep(
                 id="Synth",
                 commands=[
@@ -62,7 +62,7 @@ class BuildPipelineStack(aws_cdk.Stack):
                         ],
                         effect=aws_iam.Effect.ALLOW,
                         resources=[
-                            "arn:aws:codeartifact:us-east-1:538493872512:domain/tbg"
+                            self.node.try_get_context("tbg-codeartifact-domain-arn")
                         ],
                     ),
                     aws_iam.PolicyStatement(
@@ -72,7 +72,7 @@ class BuildPipelineStack(aws_cdk.Stack):
                         ],
                         effect=aws_iam.Effect.ALLOW,
                         resources=[
-                            "arn:aws:codeartifact:us-east-1:538493872512:repository/tbg/python"
+                            self.node.try_get_context("tbg-codeartifact-python-repository-arn")
                         ],
                     ),
                     aws_iam.PolicyStatement(
