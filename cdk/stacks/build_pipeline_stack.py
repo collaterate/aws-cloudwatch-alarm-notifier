@@ -28,7 +28,6 @@ class BuildPipelineStack(aws_cdk.Stack):
             scope=self,
             id="DevPipeline",
             pipeline_name=namer.get_name("AwsAlarmNotifierDevPipeline"),
-            self_mutation=False,
             synth=pipelines.ShellStep(
                 id="Synth",
                 commands=[
