@@ -5,7 +5,7 @@ FROM public.ecr.aws/sam/build-python$PYTHON_VERSION
 ARG CODE_PATH=./alarm_notifier
 ARG CODEARTIFACT_AUTHORIZATION_TOKEN
 ARG POETRY_INSTALL_ARGS="--only main"
-ARG POETRY_VERSION=1.6.1
+ARG POETRY_VERSION=1.7.1
 
 ENV PATH="$PATH:/root/.local/bin"
 
