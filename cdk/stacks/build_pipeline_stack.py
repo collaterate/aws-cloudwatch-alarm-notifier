@@ -21,13 +21,13 @@ class BuildPipelineStack(aws_cdk.Stack):
         self.github_connection = aws_codestarconnections.CfnConnection(
             scope=self,
             id="AlarmNotifierConnectionToGitHub",
-            connection_name="AlarmNotifierConnectionToGitHub",
+            connection_name="AlarmNotifierGitHubConnection",
             provider_type="GitHub",
         )
 
         self.pipeline = pipelines.CodePipeline(
             scope=self,
-            id="BuildDevPipeline",
+            id="DevPipeline",
             pipeline_name=namer.get_name("AwsAlarmNotifier"),
             synth=pipelines.ShellStep(
                 id="Synth",
@@ -47,7 +47,7 @@ class BuildPipelineStack(aws_cdk.Stack):
                 ],
                 input=pipelines.CodePipelineSource.connection(
                     repo_string="collaterate/aws-cloudwatch-alarm-notifier",
-                    branch="main",
+                    branch="develop",
                     connection_arn=self.github_connection.attr_connection_arn,
                     action_name=namer.get_name("GitHub"),
                 ),
@@ -97,5 +97,4 @@ class BuildPipelineStack(aws_cdk.Stack):
                 env=aws_cdk.Environment(account="800572224722", region="us-east-1"),
                 stage_name=namer.get_name("DevStage"),
             ),
-            pre=[pipelines.ManualApprovalStep(id="PromoteToDev")],
         )
