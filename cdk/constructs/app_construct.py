@@ -13,7 +13,6 @@ from aws_cdk import (
     aws_sns,
     aws_logs,
     aws_lambda_event_sources,
-    aws_ecr_assets,
     aws_secretsmanager,
 )
 from tbg_cdk import tbg_constructs
@@ -25,7 +24,6 @@ class AppConstruct(constructs.Construct):
         scope: constructs.Construct,
         id: str,
         *,
-        alarm_notifier_code: aws_lambda.Code,
         namer: tbg_cdk.IResourceNamer,
         sentry_env: str,
         sentry_dsn_secret_name: str,
@@ -46,7 +44,7 @@ class AppConstruct(constructs.Construct):
             sentry_dsn_secret_name=sentry_dsn_secret_name,
             slack_alarm_notifier_oauth_token_secret_name=slack_alarm_notifier_oauth_token_secret_name,
         )
-        self._create_function(alarm_notifier_code=alarm_notifier_code, namer=namer, vpc=vpc)
+        self._create_function(namer=namer, vpc=vpc)
 
     def _create_role_and_managed_policy(self, namer: tbg_cdk.IResourceNamer) -> None:
         self.alarm_notifier_role = aws_iam.Role(
@@ -258,13 +256,22 @@ class AppConstruct(constructs.Construct):
         )
 
     def _create_function(
-        self, alarm_notifier_code: aws_lambda.Code, namer: tbg_cdk.IResourceNamer, vpc: aws_ec2.IVpc
+        self, namer: tbg_cdk.IResourceNamer, vpc: aws_ec2.IVpc
     ) -> None:
         self.alarm_notifier = tbg_constructs.TopicQueueFunction(
             scope=self,
             id="AlarmNotifier",
             function_props=aws_lambda.FunctionProps(
-                code=alarm_notifier_code,
+                code=aws_lambda.Code.from_docker_build(
+                    path=".",
+                    build_args={
+                        "CODEARTIFACT_AUTHORIZATION_TOKEN": self.node.try_get_context(
+                            "codeartifact_authorization_token"
+                        ),
+                        "POETRY_INSTALL_ARGS": "--only=handler",
+                    },
+                    file="Dockerfile.alarm_notifier",
+                ),
                 handler="alarm_notifier.lambda_handler.handler",
                 runtime=aws_lambda.Runtime.PYTHON_3_11,
                 architecture=aws_lambda.Architecture.X86_64,

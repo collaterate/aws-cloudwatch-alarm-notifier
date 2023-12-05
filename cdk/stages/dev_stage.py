@@ -16,21 +16,9 @@ class DevStage(aws_cdk.Stage):
 
         namer = tbg_cdk.ResourceNamer(["Dev", "Prv", "UE1"])
 
-        alarm_notifier_code = aws_lambda.Code.from_docker_build(
-            path=".",
-            build_args={
-                "CODEARTIFACT_AUTHORIZATION_TOKEN": self.node.try_get_context(
-                    "codeartifact_authorization_token"
-                ),
-                "POETRY_INSTALL_ARGS": "--only=handler",
-            },
-            file="Dockerfile.alarm_notifier",
-        )
-
         self.stack = cdk.stacks.application_stack.ApplicationStack(
             scope=self,
             id="AlarmNotifier",
-            alarm_notifier_code=alarm_notifier_code,
             namer=namer.with_prefix("AlarmNotifier"),
             sentry_dsn_secret_name="/Sentry/AlarmNotifier/Dsn",
             sentry_env="dev",

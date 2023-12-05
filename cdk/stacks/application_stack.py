@@ -12,7 +12,6 @@ class ApplicationStack(aws_cdk.Stack):
         scope: constructs.Construct,
         id: str,
         *,
-        alarm_notifier_code: aws_lambda.Code,
         namer: tbg_cdk.IResourceNamer,
         sentry_dsn_secret_name: str,
         sentry_env: str,
@@ -28,7 +27,6 @@ class ApplicationStack(aws_cdk.Stack):
         self.app = cdk.constructs.app_construct.AppConstruct(
             scope=self,
             id="App",
-            alarm_notifier_code=alarm_notifier_code,
             namer=namer.with_prefix("App"),
             sentry_dsn_secret_name=sentry_dsn_secret_name,
             sentry_env=sentry_env,
