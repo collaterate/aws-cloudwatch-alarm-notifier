@@ -24,7 +24,7 @@ class BuildPipelineStack(aws_cdk.Stack):
             provider_type="GitHub",
         )
 
-        self.pipeline = pipelines.CodePipeline(
+        self.dev_pipeline = pipelines.CodePipeline(
             scope=self,
             id="DevPipeline",
             pipeline_name=namer.get_name("AwsAlarmNotifierDevPipeline"),
@@ -88,7 +88,7 @@ class BuildPipelineStack(aws_cdk.Stack):
             ),
         )
 
-        self.pipeline.add_stage(
+        self.dev_pipeline.add_stage(
             stage=cdk.stages.dev_stage.DevStage(
                 scope=self,
                 id="DevStage",
