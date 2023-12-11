@@ -1,11 +1,7 @@
-import os
-
 import aws_cdk
-import cdk_nag
 import constructs
 import tbg_cdk
-import tbg_cdk_nag
-from aws_cdk import aws_lambda
+from aws_cdk import aws_iam
 
 import cdk.stacks.application_stack
 
@@ -26,15 +22,81 @@ class DevStage(aws_cdk.Stage):
             stack_name=namer.get_name("AlarmNotifier"),
         )
 
-        aws_cdk.Aspects.of(self).add(
-            tbg_cdk.tbg_aspects.SetRemovalPolicy(policy=aws_cdk.RemovalPolicy.DESTROY)
+        self.permissions_boundary = aws_iam.ManagedPolicy(
+            scope=self.stack,
+            id="PermissionsBoundary",
+            description="Permissions boundary for the alarm notifier stack",
+            managed_policy_name=namer.get_name("PermissionsBoundary"),
+            statements=[
+                aws_iam.PolicyStatement(actions=["*"], resources=["*"]),
+                aws_iam.PolicyStatement(
+                    actions=[
+                        "iam:CreateRole",
+                        "iam:CreateUser",
+                        "iam:PutRolePermissionsBoundary",
+                        "iam:PutUserPermissionsBoundary",
+                    ],
+                    conditions={
+                        "ArnNotEquals": {
+                            "iam:PermissionsBoundary": aws_cdk.Arn.format(
+                                components=aws_cdk.ArnComponents(
+                                    resource="policy",
+                                    service="iam",
+                                    resource_name=namer.get_name("PermissionsBoundary"),
+                                ),
+                                stack=self.stack,
+                            )
+                        }
+                    },
+                    effect=aws_iam.Effect.DENY,
+                    resources=["*"],
+                ),
+                aws_iam.PolicyStatement(
+                    actions=[
+                        "iam:CreatePolicyVersion",
+                        "iam:DeletePolicy",
+                        "iam:DeletePolicyVersion",
+                        "iam:SetDefaultPolicyVersion",
+                    ],
+                    effect=aws_iam.Effect.DENY,
+                    resources=[
+                        aws_cdk.Arn.format(
+                            components=aws_cdk.ArnComponents(
+                                resource="policy",
+                                service="iam",
+                                resource_name=namer.get_name("PermissionsBoundary"),
+                            ),
+                            stack=self.stack,
+                        )
+                    ],
+                ),
+                aws_iam.PolicyStatement(
+                    actions=[
+                        "iam:DeleteRolePermissionsBoundary",
+                        "iam:DeleteUserPermissionsBoundary",
+                    ],
+                    effect=aws_iam.Effect.DENY,
+                    resources=["*"],
+                ),
+                aws_iam.PolicyStatement(
+                    actions=["*"],
+                    conditions={
+                        "StringNotEquals": {
+                            "aws:ResourceTag/ApplicationName": "Alarm Notifier",
+                            "aws:ResourceTag/Environment": "Development",
+                        }
+                    },
+                    effect=aws_iam.Effect.DENY,
+                    resources=["*"],
+                ),
+                aws_iam.PolicyStatement(
+                    actions=["ec2:DeleteTags", "tag:UntagResources"],
+                    effect=aws_iam.Effect.DENY,
+                    resources=["*"],
+                ),
+            ],
         )
 
-        aws_cdk.Aspects.of(self).add(cdk_nag.AwsSolutionsChecks(verbose=True))
-        aws_cdk.Aspects.of(self).add(tbg_cdk_nag.TbgSolutionsChecks(verbose=True))
+        aws_iam.PermissionsBoundary.of(self.stack).apply(self.permissions_boundary)
 
-        aws_cdk.Tags.of(self).add("ApplicationName", "Alarm Notifier")
         aws_cdk.Tags.of(self).add("Environment", "Development")
-        aws_cdk.Tags.of(self).add("Region", "us-east-1")
-
-        aws_cdk.Tags.of(self).add("ApplicationVersion", os.getenv("VERSION"))

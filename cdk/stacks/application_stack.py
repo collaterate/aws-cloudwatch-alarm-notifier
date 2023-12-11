@@ -1,7 +1,11 @@
+import os
+
 import aws_cdk
+import cdk_nag
 import constructs
 import tbg_cdk
-from aws_cdk import aws_ec2, aws_lambda
+import tbg_cdk_nag
+from aws_cdk import aws_ec2
 
 import cdk.constructs.app_construct
 
@@ -33,3 +37,15 @@ class ApplicationStack(aws_cdk.Stack):
             slack_alarm_notifier_oauth_token_secret_name=slack_alarm_notifier_oauth_token_secret_name,
             vpc=vpc,
         )
+
+        aws_cdk.Aspects.of(self).add(
+            tbg_cdk.tbg_aspects.SetRemovalPolicy(policy=aws_cdk.RemovalPolicy.DESTROY)
+        )
+
+        aws_cdk.Aspects.of(self).add(cdk_nag.AwsSolutionsChecks(verbose=True))
+        aws_cdk.Aspects.of(self).add(tbg_cdk_nag.TbgSolutionsChecks(verbose=True))
+
+        aws_cdk.Tags.of(self).add("ApplicationName", "Alarm Notifier")
+        aws_cdk.Tags.of(self).add("Region", self.region)
+
+        aws_cdk.Tags.of(self).add("ApplicationVersion", os.getenv("VERSION"))
