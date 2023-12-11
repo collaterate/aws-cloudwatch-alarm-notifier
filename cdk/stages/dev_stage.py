@@ -1,4 +1,5 @@
 import aws_cdk
+import cdk_nag
 import constructs
 import tbg_cdk
 from aws_cdk import aws_iam
@@ -94,6 +95,17 @@ class DevStage(aws_cdk.Stage):
                     effect=aws_iam.Effect.DENY,
                     resources=["*"],
                 ),
+            ],
+        )
+
+        cdk_nag.NagSuppressions.add_resource_suppressions(
+            construct=self.permissions_boundary,
+            suppressions=[
+                cdk_nag.NagPackSuppression(
+                    applies_to=["Action::*", "Resource::*"],
+                    id="AwsSolutions-IAM5",
+                    reason="Permission boundaries are allowed to use wildcards",
+                )
             ],
         )
 
