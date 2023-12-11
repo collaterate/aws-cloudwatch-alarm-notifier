@@ -65,6 +65,7 @@ class DevStage(aws_cdk.Stage):
                             components=aws_cdk.ArnComponents(
                                 resource="policy",
                                 service="iam",
+                                region="",
                                 resource_name=namer.get_name("PermissionsBoundary"),
                             ),
                             stack=self.stack,
