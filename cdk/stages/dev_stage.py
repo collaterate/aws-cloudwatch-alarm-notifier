@@ -81,7 +81,13 @@ class DevStage(aws_cdk.Stage):
                     resources=["*"],
                 ),
                 aws_iam.PolicyStatement(
-                    actions=["*"],
+                    not_actions=[
+                        "ec2:CreateNetworkInterface",
+                        "ec2:DescribeNetworkInterfaces",
+                        "ec2:DeleteNetworkInterface",
+                        "ec2:AssignPrivateIpAddresses",
+                        "ec2:UnassignPrivateIpAddresses",
+                    ],
                     conditions={
                         "StringNotEquals": {
                             "aws:ResourceTag/ApplicationName": "Alarm Notifier",
