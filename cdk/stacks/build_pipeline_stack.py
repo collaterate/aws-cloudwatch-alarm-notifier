@@ -6,7 +6,7 @@ from aws_cdk import pipelines, aws_iam, aws_codestarconnections, aws_lambda
 import cdk.stages.dev_stage
 
 
-class BuildPipelineStack(aws_cdk.Stack):
+class BuildDevPipelineStack(aws_cdk.Stack):
     def __init__(
         self,
         scope: constructs.Construct,
@@ -71,7 +71,9 @@ class BuildPipelineStack(aws_cdk.Stack):
                         ],
                         effect=aws_iam.Effect.ALLOW,
                         resources=[
-                            self.node.try_get_context("tbg-codeartifact-python-repository-arn")
+                            self.node.try_get_context(
+                                "tbg-codeartifact-python-repository-arn"
+                            )
                         ],
                     ),
                     aws_iam.PolicyStatement(

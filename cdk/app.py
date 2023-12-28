@@ -7,7 +7,7 @@ import cdk.stacks.build_pipeline_stack
 
 app = aws_cdk.App()
 
-cdk.stacks.build_pipeline_stack.BuildPipelineStack(
+cdk.stacks.build_pipeline_stack.BuildDevPipelineStack(
     scope=app,
     id="AlarmNotifierPipeline",
     env=aws_cdk.Environment(account="800572224722", region="us-east-1"),

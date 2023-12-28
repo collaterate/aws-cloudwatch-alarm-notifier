@@ -358,6 +358,10 @@ class AppConstruct(constructs.Construct):
             ),
         )
 
+        self.alarm_notifier_function.node.add_dependency(
+            self.alarm_notifier_function_execution_managed_policy
+        )
+
         self.alarm_notifier_function.add_event_source(
             source=aws_lambda_event_sources.SqsEventSource(
                 queue=self.alarm_notifier_queue, report_batch_item_failures=True
