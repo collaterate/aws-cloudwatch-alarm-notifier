@@ -1,9 +1,10 @@
 import aws_cdk
 import constructs
 import tbg_cdk
-from aws_cdk import pipelines, aws_iam, aws_codestarconnections, aws_lambda
+from aws_cdk import pipelines, aws_iam, aws_codestarconnections
 
 import cdk.stages.dev_stage
+import cdk.stages.prod_stage
 
 
 class BuildProdPipelineStack(aws_cdk.Stack):
@@ -42,7 +43,7 @@ class BuildProdPipelineStack(aws_cdk.Stack):
                     "npm i",
                     "poetry config http-basic.tbg aws $(aws codeartifact get-authorization-token --duration-seconds 3600 --domain tbg --domain-owner 538493872512 --query authorizationToken --output text)",
                     "poetry install --no-root --without=dev",
-                    "npx cdk --context codeartifact_authorization_token=`aws codeartifact get-authorization-token --duration-seconds 3600 --domain tbg --domain-owner 538493872512 --query authorizationToken --output text` synth",
+                    "npx cdk --context codeartifact_authorization_token=`aws codeartifact get-authorization-token --duration-seconds 3600 --domain tbg --domain-owner 538493872512 --query authorizationToken --output text` synth ProdAlarmNotifierPipeline",
                 ],
                 input=pipelines.CodePipelineSource.connection(
                     repo_string="collaterate/aws-cloudwatch-alarm-notifier",
@@ -136,7 +137,7 @@ class BuildDevPipelineStack(aws_cdk.Stack):
                     "npm i",
                     "poetry config http-basic.tbg aws $(aws codeartifact get-authorization-token --duration-seconds 3600 --domain tbg --domain-owner 538493872512 --query authorizationToken --output text)",
                     "poetry install --no-root --without=dev",
-                    "npx cdk --context codeartifact_authorization_token=`aws codeartifact get-authorization-token --duration-seconds 3600 --domain tbg --domain-owner 538493872512 --query authorizationToken --output text` synth",
+                    "npx cdk --context codeartifact_authorization_token=`aws codeartifact get-authorization-token --duration-seconds 3600 --domain tbg --domain-owner 538493872512 --query authorizationToken --output text` synth DevAlarmNotifierPipeline",
                 ],
                 input=pipelines.CodePipelineSource.connection(
                     repo_string="collaterate/aws-cloudwatch-alarm-notifier",

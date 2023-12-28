@@ -60,5 +60,73 @@
         ]
       }
     ]
+  },
+  "vpc-provider:account=538493872512:filter.tag:AccountResourceId=Vpc:region=us-east-1:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-fc492e9b",
+    "vpcCidrBlock": "10.0.0.0/16",
+    "ownerAccountId": "538493872512",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Private",
+        "type": "Private",
+        "subnets": [
+          {
+            "subnetId": "subnet-2a9efa70",
+            "cidr": "10.0.4.0/24",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-0bc34077715ce5693"
+          },
+          {
+            "subnetId": "subnet-178efe4a",
+            "cidr": "10.0.175.0/24",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-0bc34077715ce5693"
+          },
+          {
+            "subnetId": "subnet-7d849041",
+            "cidr": "10.0.5.0/24",
+            "availabilityZone": "us-east-1c",
+            "routeTableId": "rtb-0bc34077715ce5693"
+          },
+          {
+            "subnetId": "subnet-66672259",
+            "cidr": "10.0.176.0/24",
+            "availabilityZone": "us-east-1c",
+            "routeTableId": "rtb-0bc34077715ce5693"
+          }
+        ]
+      },
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-dfdbe087",
+            "cidr": "10.0.0.0/24",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-ae1fe9c8"
+          },
+          {
+            "subnetId": "subnet-007d3139c597646bc",
+            "cidr": "10.0.6.0/24",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-ae1fe9c8"
+          },
+          {
+            "subnetId": "subnet-0ae364fcd16b9141c",
+            "cidr": "10.0.2.0/24",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-ae1fe9c8"
+          },
+          {
+            "subnetId": "subnet-9335caaf",
+            "cidr": "10.0.3.0/24",
+            "availabilityZone": "us-east-1c",
+            "routeTableId": "rtb-ae1fe9c8"
+          }
+        ]
+      }
+    ]
   }
 }
