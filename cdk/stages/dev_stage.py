@@ -87,6 +87,8 @@ class DevStage(aws_cdk.Stage):
                         "ec2:DeleteNetworkInterface",
                         "ec2:AssignPrivateIpAddresses",
                         "ec2:UnassignPrivateIpAddresses",
+                        "secretsmanager:DescribeSecret",
+                        "secretsmanager:GetSecretValue",
                     ],
                     conditions={
                         "StringNotEquals": {
