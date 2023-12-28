@@ -1,6 +1,4 @@
-ARG PYTHON_VERSION=3.12
-
-FROM public.ecr.aws/sam/build-python$PYTHON_VERSION
+FROM public.ecr.aws/sam/build-python3.12:latest
 
 ARG CODE_PATH=./alarm_notifier
 ARG CODEARTIFACT_AUTHORIZATION_TOKEN
