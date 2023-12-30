@@ -93,7 +93,7 @@ class AppConstruct(constructs.Construct):
             aws_iam.ServicePrincipal(f"logs.{aws_cdk.Aws.REGION}.amazonaws.com")
         )
 
-        self.key_alias.grant_encrypt_decrypt(
+        self.key.grant_encrypt_decrypt(
             self.alarm_notifier_function_execution_managed_policy
         )
 
