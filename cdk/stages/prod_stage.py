@@ -17,9 +17,9 @@ class ProdStage(aws_cdk.Stage):
             scope=self,
             id="AlarmNotifier",
             namer=namer.with_prefix("AlarmNotifier"),
-            sentry_dsn_secret_name="/Sentry/AlarmNotifier/Dsn",
+            sentry_dns_secret_complete_arn="arn:aws:secretsmanager:us-east-1:538493872512:secret:/Sentry/AlarmNotifier/Dsn-Nqh9tx",
             sentry_env="prod",
-            slack_alarm_notifier_oauth_token_secret_name="/Slack/AWSCloudWatchAlarmNotifier/BotUserOAuthToken",
+            slack_alarm_notifier_oauth_token_secret_complete_arn="arn:aws:secretsmanager:us-east-1:538493872512:secret:/Slack/AWSCloudWatchAlarmNotifier/BotUserOAuthToken-pOHP5y",
             stack_name=namer.get_name("AlarmNotifier"),
         )
 
