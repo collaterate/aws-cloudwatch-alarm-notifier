@@ -11,6 +11,7 @@ import aws_lambda_powertools.utilities.idempotency
 import aws_lambda_powertools.utilities.parser
 import aws_lambda_powertools.utilities.parser.envelopes.event_bridge
 import aws_lambda_powertools.utilities.typing
+import boto3
 import pydantic
 import pynamodb.attributes
 import pynamodb.models
@@ -65,7 +66,7 @@ console_handler.setFormatter(
 
 logging.basicConfig(handlers=[console_handler], level=logging.DEBUG, force=True)
 
-logging.getLogger("botocore").setLevel(logging.DEBUG)
+boto3.set_stream_logger("", logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 
