@@ -35,8 +35,8 @@ class AppConstruct(constructs.Construct):
         *,
         namer: tbg_cdk.IResourceNamer,
         sentry_env: str,
-        sentry_dsn_secret_name: str,
-        slack_alarm_notifier_oauth_token_secret_name: str,
+        sentry_dns_secret_complete_arn: str,
+        slack_alarm_notifier_oauth_token_secret_complete_arn: str,
         vpc: aws_ec2.IVpc,
     ):
         super().__init__(scope=scope, id=id)
@@ -52,8 +52,8 @@ class AppConstruct(constructs.Construct):
         self._create_function_parameters_and_secrets(
             namer=namer,
             sentry_env=sentry_env,
-            sentry_dsn_secret_name=sentry_dsn_secret_name,
-            slack_alarm_notifier_oauth_token_secret_name=slack_alarm_notifier_oauth_token_secret_name,
+            sentry_dns_secret_complete_arn=sentry_dns_secret_complete_arn,
+            slack_alarm_notifier_oauth_token_secret_complete_arn=slack_alarm_notifier_oauth_token_secret_complete_arn,
         )
         self._create_function_log_group(namer=namer)
         self._create_function(namer=namer, vpc=vpc)
@@ -208,8 +208,8 @@ class AppConstruct(constructs.Construct):
         self,
         namer: tbg_cdk.IResourceNamer,
         sentry_env: str,
-        sentry_dsn_secret_name: str,
-        slack_alarm_notifier_oauth_token_secret_name: str,
+        sentry_dns_secret_complete_arn: str,
+        slack_alarm_notifier_oauth_token_secret_complete_arn: str,
     ) -> None:
         self.alarm_notification_idempotency_table_name_parameter = aws_ssm.StringParameter(
             scope=self,
@@ -256,10 +256,10 @@ class AppConstruct(constructs.Construct):
         )
 
         self.alarm_notification_sentry_dsn_secret = (
-            aws_secretsmanager.Secret.from_secret_name_v2(
+            aws_secretsmanager.Secret.from_secret_complete_arn(
                 scope=self,
                 id="AlarmNotificationSentryProjectSecret",
-                secret_name=sentry_dsn_secret_name,
+                secret_name=sentry_dns_secret_complete_arn,
             )
         )
 
@@ -268,10 +268,10 @@ class AppConstruct(constructs.Construct):
         )
 
         self.alarm_notification_slack_oauth_secret = (
-            aws_secretsmanager.Secret.from_secret_name_v2(
+            aws_secretsmanager.Secret.from_secret_complete_arn(
                 scope=self,
                 id="AlarmNotificationSlackOauthParameter",
-                secret_name=slack_alarm_notifier_oauth_token_secret_name,
+                secret_name=slack_alarm_notifier_oauth_token_secret_complete_arn,
             )
         )
 
@@ -343,9 +343,9 @@ class AppConstruct(constructs.Construct):
             environment={
                 "IDEMPOTENCY_TABLE_NAME_SSM_PARAMETER_NAME": self.alarm_notification_idempotency_table_name_parameter.parameter_name,
                 "ALARM_SLACK_CHANNELS_DYNAMODB_TABLE_SSM_PARAMETER_NAME": self.alarm_notification_slack_channels_table_name_parameter.parameter_name,
-                "SENTRY_DSN_SECRET_ARN": self.alarm_notification_sentry_dsn_secret.secret_arn,
+                "SENTRY_DSN_SECRET_ARN": self.alarm_notification_sentry_dsn_secret.secret_full_arn,
                 "SENTRY_ENV_SSM_PARAMETER_NAME": self.alarm_notification_sentry_env_parameter.parameter_name,
-                "SLACK_OAUTH_TOKEN_SECRET_ARN": self.alarm_notification_slack_oauth_secret.secret_arn,
+                "SLACK_OAUTH_TOKEN_SECRET_ARN": self.alarm_notification_slack_oauth_secret.secret_full_arn,
             },
             function_name=namer.get_name("Function"),
             log_group=self.alarm_notifier_function_log_group,

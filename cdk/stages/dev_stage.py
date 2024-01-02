@@ -17,9 +17,9 @@ class DevStage(aws_cdk.Stage):
             scope=self,
             id="AlarmNotifier",
             namer=namer.with_prefix("AlarmNotifier"),
-            sentry_dsn_secret_name="/Sentry/AlarmNotifier/Dsn",
+            sentry_dns_secret_complete_arn="arn:aws:secretsmanager:us-east-1:800572224722:secret:/Sentry/AlarmNotifier/Dsn-7qkInJ",
             sentry_env="dev",
-            slack_alarm_notifier_oauth_token_secret_name="/Slack/AWSCloudWatchAlarmNotifier/BotUserOAuthToken",
+            slack_alarm_notifier_oauth_token_secret_complete_arn="arn:aws:secretsmanager:us-east-1:800572224722:secret:/Slack/AWSCloudWatchAlarmNotifier/BotUserOAuthToken-529oMU",
             stack_name=namer.get_name("AlarmNotifier"),
         )
 
@@ -87,8 +87,8 @@ class DevStage(aws_cdk.Stage):
                     ],
                     effect=aws_iam.Effect.DENY,
                     not_resources=[
-                        self.stack.app.alarm_notification_sentry_dsn_secret.secret_arn,
-                        self.stack.app.alarm_notification_slack_oauth_secret.secret_arn,
+                        self.stack.app.alarm_notification_sentry_dsn_secret.secret_full_arn,
+                        self.stack.app.alarm_notification_slack_oauth_secret.secret_full_arn,
                     ],
                 ),
                 aws_iam.PolicyStatement(

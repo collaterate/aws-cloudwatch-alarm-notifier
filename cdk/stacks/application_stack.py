@@ -17,9 +17,9 @@ class ApplicationStack(aws_cdk.Stack):
         id: str,
         *,
         namer: tbg_cdk.IResourceNamer,
-        sentry_dsn_secret_name: str,
+        sentry_dns_secret_complete_arn: str,
         sentry_env: str,
-        slack_alarm_notifier_oauth_token_secret_name: str,
+        slack_alarm_notifier_oauth_token_secret_complete_arn: str,
         **kwargs
     ):
         super().__init__(scope=scope, id=id, **kwargs)
@@ -32,9 +32,9 @@ class ApplicationStack(aws_cdk.Stack):
             scope=self,
             id="App",
             namer=namer.with_prefix("App"),
-            sentry_dsn_secret_name=sentry_dsn_secret_name,
+            sentry_dns_secret_complete_arn=sentry_dns_secret_complete_arn,
             sentry_env=sentry_env,
-            slack_alarm_notifier_oauth_token_secret_name=slack_alarm_notifier_oauth_token_secret_name,
+            slack_alarm_notifier_oauth_token_secret_complete_arn=slack_alarm_notifier_oauth_token_secret_complete_arn,
             vpc=vpc,
         )
 
