@@ -270,7 +270,7 @@ class AppConstruct(constructs.Construct):
         self.alarm_notification_slack_oauth_secret = aws_secretsmanager.Secret.from_secret_complete_arn(
             scope=self,
             id="AlarmNotificationSlackOauthParameter",
-            secret_complete_arnsecret_name=slack_alarm_notifier_oauth_token_secret_complete_arn,
+            secret_complete_arn=slack_alarm_notifier_oauth_token_secret_complete_arn,
         )
 
         self.alarm_notification_slack_oauth_secret.grant_read(
