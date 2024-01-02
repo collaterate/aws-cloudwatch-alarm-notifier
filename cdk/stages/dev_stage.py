@@ -81,15 +81,23 @@ class DevStage(aws_cdk.Stage):
                     resources=["*"],
                 ),
                 aws_iam.PolicyStatement(
+                    actions=[
+                        "secretsmanager:DescribeSecret",
+                        "secretsmanager:GetSecretValue",
+                    ],
+                    effect=aws_iam.Effect.DENY,
+                    not_resources=[
+                        self.stack.app.alarm_notification_sentry_dsn_secret,
+                        self.stack.app.alarm_notification_slack_oauth_secret,
+                    ],
+                ),
+                aws_iam.PolicyStatement(
                     not_actions=[
                         "ec2:CreateNetworkInterface",
                         "ec2:DescribeNetworkInterfaces",
                         "ec2:DeleteNetworkInterface",
                         "ec2:AssignPrivateIpAddresses",
                         "ec2:UnassignPrivateIpAddresses",
-                        "secretsmanager:DescribeSecret",
-                        "secretsmanager:GetSecretValue",
-                        "ssm:GetParameter",
                     ],
                     conditions={
                         "StringNotEquals": {
