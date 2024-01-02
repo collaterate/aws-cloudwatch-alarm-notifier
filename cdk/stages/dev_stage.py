@@ -17,9 +17,9 @@ class DevStage(aws_cdk.Stage):
             scope=self,
             id="AlarmNotifier",
             namer=namer.with_prefix("AlarmNotifier"),
-            sentry_dns_secret_complete_arn="arn:aws:secretsmanager:us-east-1:538493872512:secret:/Sentry/AlarmNotifier/Dsn-Nqh9tx",
+            sentry_dns_secret_complete_arn="arn:aws:secretsmanager:us-east-1:800572224722:secret:/Sentry/AlarmNotifier/Dsn-7qkInJ",
             sentry_env="dev",
-            slack_alarm_notifier_oauth_token_secret_complete_arn="arn:aws:secretsmanager:us-east-1:538493872512:secret:/Slack/AWSCloudWatchAlarmNotifier/BotUserOAuthToken-pOHP5y",  # TODO create a unique token for this bot
+            slack_alarm_notifier_oauth_token_secret_complete_arn="arn:aws:secretsmanager:us-east-1:800572224722:secret:/Slack/AWSCloudWatchAlarmNotifier/BotUserOAuthToken-529oMU",  # TODO create a unique token for this bot
             stack_name=namer.get_name("AlarmNotifier"),
         )
 
