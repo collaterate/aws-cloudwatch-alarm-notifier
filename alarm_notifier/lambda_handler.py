@@ -66,8 +66,6 @@ console_handler.setFormatter(
 
 logging.basicConfig(handlers=[console_handler], level=logging.DEBUG, force=True)
 
-boto3.set_stream_logger("", logging.DEBUG)
-
 logger = logging.getLogger(__name__)
 
 
