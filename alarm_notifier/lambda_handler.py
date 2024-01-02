@@ -11,7 +11,6 @@ import aws_lambda_powertools.utilities.idempotency
 import aws_lambda_powertools.utilities.parser
 import aws_lambda_powertools.utilities.parser.envelopes.event_bridge
 import aws_lambda_powertools.utilities.typing
-import boto3
 import pydantic
 import pynamodb.attributes
 import pynamodb.models
@@ -26,7 +25,7 @@ from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 sentry_sdk.init(
-    dsn=parameters.get_secret(os.getenv("SENTRY_DSN_SECRET_NAME")),
+    dsn=parameters.get_secret(os.getenv("SENTRY_DSN_SECRET_ARN")),
     environment=parameters.get_parameter(os.getenv("SENTRY_ENV_SSM_PARAMETER_NAME")),
     integrations=[
         AwsLambdaIntegration(),
@@ -283,7 +282,7 @@ def record_handler(
 )
 def event_handler(event: EventBridgeCloudWatchAlarmEvent):
     slack_client = slack_sdk.WebClient(
-        token=parameters.get_secret(os.getenv("SLACK_OAUTH_TOKEN_SECRET_NAME"))
+        token=parameters.get_secret(os.getenv("SLACK_OAUTH_TOKEN_SECRET_ARN"))
     )
 
     slack_message = _build_slack_message(event)

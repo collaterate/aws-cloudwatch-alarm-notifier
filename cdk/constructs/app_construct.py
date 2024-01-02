@@ -343,10 +343,9 @@ class AppConstruct(constructs.Construct):
             environment={
                 "IDEMPOTENCY_TABLE_NAME_SSM_PARAMETER_NAME": self.alarm_notification_idempotency_table_name_parameter.parameter_name,
                 "ALARM_SLACK_CHANNELS_DYNAMODB_TABLE_SSM_PARAMETER_NAME": self.alarm_notification_slack_channels_table_name_parameter.parameter_name,
-                "SENTRY_DSN_SECRET_NAME": self.alarm_notification_sentry_dsn_secret.secret_name,
+                "SENTRY_DSN_SECRET_ARN": self.alarm_notification_sentry_dsn_secret.secret_arn,
                 "SENTRY_ENV_SSM_PARAMETER_NAME": self.alarm_notification_sentry_env_parameter.parameter_name,
-                "SLACK_OAUTH_TOKEN_SECRET_NAME": self.alarm_notification_slack_oauth_secret.secret_name,
-                "POWERTOOLS_DEBUG": "1",
+                "SLACK_OAUTH_TOKEN_SECRET_ARN": self.alarm_notification_slack_oauth_secret.secret_arn,
             },
             function_name=namer.get_name("Function"),
             log_group=self.alarm_notifier_function_log_group,
