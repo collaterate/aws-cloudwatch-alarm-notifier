@@ -87,8 +87,8 @@ class DevStage(aws_cdk.Stage):
                     ],
                     effect=aws_iam.Effect.DENY,
                     not_resources=[
-                        self.stack.app.alarm_notification_sentry_dsn_secret.secret_full_arn,
-                        self.stack.app.alarm_notification_slack_oauth_secret.secret_full_arn,
+                        self.stack.app.alarm_notification_sentry_dsn_secret.secret_arn,
+                        self.stack.app.alarm_notification_slack_oauth_secret.secret_arn,
                     ],
                 ),
                 aws_iam.PolicyStatement(
