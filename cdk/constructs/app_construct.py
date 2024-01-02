@@ -346,7 +346,7 @@ class AppConstruct(constructs.Construct):
                 "SENTRY_DSN_SECRET_NAME": self.alarm_notification_sentry_dsn_secret.secret_name,
                 "SENTRY_ENV_SSM_PARAMETER_NAME": self.alarm_notification_sentry_env_parameter.parameter_name,
                 "SLACK_OAUTH_TOKEN_SECRET_NAME": self.alarm_notification_slack_oauth_secret.secret_name,
-                "POWERTOOLS_DEBUG": True,
+                "POWERTOOLS_DEBUG": "1",
             },
             function_name=namer.get_name("Function"),
             log_group=self.alarm_notifier_function_log_group,
