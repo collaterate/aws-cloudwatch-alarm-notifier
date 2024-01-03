@@ -127,7 +127,7 @@ class AppConstruct(constructs.Construct):
             },
         )
 
-        self.key_alias.grant_decrypt(principal)
+        self.key_alias.grant_encrypt(principal)
         self.alarm_notifier_topic.grant_publish(principal)
 
     def _create_dead_letter_queue(self, namer: tbg_cdk.IResourceNamer) -> None:
