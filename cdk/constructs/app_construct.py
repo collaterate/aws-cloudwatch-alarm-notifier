@@ -120,6 +120,15 @@ class AppConstruct(constructs.Construct):
             topic_name=namer.get_name("Topic"),
         )
 
+        self.alarm_notifier_topic.grant_publish(
+            aws_iam.ServicePrincipal(
+                service="cloudwatch.amazonaws.com",
+                conditions={
+                    "StringEquals": {"AWS:SourceOwner": aws_cdk.Stack.of(self).account}
+                },
+            )
+        )
+
     def _create_dead_letter_queue(self, namer: tbg_cdk.IResourceNamer) -> None:
         self.alarm_notifier_dead_letter_queue = aws_sqs.Queue(
             scope=self,
