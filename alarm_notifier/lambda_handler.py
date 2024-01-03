@@ -87,7 +87,7 @@ class CloudWatchAlarmEventTrigger(pydantic.BaseModel):
     )
     period: int = pydantic.Field(alias="Period")
     evaluation_periods: int = pydantic.Field(alias="EvaluationPeriods")
-    datapoints_to_alarm: int = pydantic.Field(alias="DatapoinsToAlarm")
+    datapoints_to_alarm: int = pydantic.Field(alias="DatapointsToAlarm")
     comparison_operator: str = pydantic.Field(alias="ComparisonOperator")
     threshold: decimal.Decimal = pydantic.Field(alias="Threshold")
     treat_missing_data: str = pydantic.Field(alias="TreatMissingData")
