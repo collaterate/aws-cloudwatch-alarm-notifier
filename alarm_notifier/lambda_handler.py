@@ -1,8 +1,10 @@
 import dataclasses
+import decimal
 import enum
 import logging
 import os
 import typing
+from datetime import datetime
 
 import aws_lambda_powertools
 import aws_lambda_powertools.utilities.batch
@@ -68,24 +70,59 @@ logging.basicConfig(handlers=[console_handler], level=logging.DEBUG, force=True)
 logger = logging.getLogger(__name__)
 
 
-class CloudWatchAlarmEventDetailStateValue(str, enum.Enum):
+class CloudWatchAlarmEventStateValue(str, enum.Enum):
     ALARM = "ALARM"
     OK = "OK"
     INSUFFICIENT_DATA = "INSUFFICIENT_DATA"
 
 
-class CloudWatchAlarmEventDetailState(pydantic.BaseModel):
-    reason: str
-    value: CloudWatchAlarmEventDetailStateValue
+class CloudWatchAlarmEventTrigger(pydantic.BaseModel):
+    metric_name: str = pydantic.Field(alias="MetricName")
+    namespace: str = pydantic.Field(alias="Namespace")
+    statistic_type: str = pydantic.Field(alias="StatisticType")
+    statistic: str = pydantic.Field(alias="Statistic")
+    unit: typing.Optional[str] = pydantic.Field(alias="Unit", default_factory=list)
+    dimensions: typing.Mapping[str, str] = pydantic.Field(
+        alias="Dimensions", default_factory=dict
+    )
+    period: int = pydantic.Field(alias="Period")
+    evaluation_periods: int = pydantic.Field(alias="EvaluationPeriods")
+    datapoints_to_alarm: int = pydantic.Field(alias="DatapoinsToAlarm")
+    comparison_operator: str = pydantic.Field(alias="ComparisonOperator")
+    threshold: decimal.Decimal = pydantic.Field(alias="Threshold")
+    treat_missing_data: str = pydantic.Field(alias="TreatMissingData")
+    evaluate_low_sample_count_percentile: str = pydantic.Field(
+        alias="EvaluateLowSampleCountPercentile"
+    )
 
 
-class CloudWatchAlarmEventDetail(pydantic.BaseModel):
-    alarm_name: str = pydantic.Field(alias="alarmName")
-    state: CloudWatchAlarmEventDetailState
-
-
-class EventBridgeCloudWatchAlarmEvent(EventBridgeModel):
-    detail: CloudWatchAlarmEventDetail
+class CloudWatchAlarmEvent(pydantic.BaseModel):
+    alarm_name: str = pydantic.Field(alias="AlarmName")
+    alarm_description: str = pydantic.Field(alias="AlarmDescription")
+    aws_account_id: str = pydantic.Field(alias="AWSAccountId")
+    alarm_configuration_updated_timestamp: datetime = pydantic.Field(
+        alias="AlarmConfigurationUpdatedTimestamp"
+    )
+    new_state_value: CloudWatchAlarmEventStateValue = pydantic.Field(
+        alias="NewStateValue"
+    )
+    new_state_reason: str = pydantic.Field(alias="NewStateReason")
+    state_change_time: datetime = pydantic.Field(alias="StateChangeTime")
+    region: str = pydantic.Field(alias="Region")
+    alarm_arn: str = pydantic.Field(alias="AlarmArn")
+    old_state_value: CloudWatchAlarmEventStateValue = pydantic.Field(
+        alias="OldStateValue"
+    )
+    ok_actions: typing.List[str] = pydantic.Field(
+        alias="OKActions", default_factory=list
+    )
+    alarm_actions: typing.List[str] = pydantic.Field(
+        alias="AlarmActions", default_factory=list
+    )
+    insufficient_data_actions: typing.List[str] = pydantic.Field(
+        alias="InsufficientDataActions", default_factory=list
+    )
+    trigger: CloudWatchAlarmEventTrigger = pydantic.Field(alias="Trigger")
 
 
 class AlarmSlackWebhookModel(pynamodb.models.Model):
@@ -109,8 +146,8 @@ class UnknownAlarmStateError(Exception):
         return f"unknown alarm state '{self.state}'"
 
 
-def _build_slack_message(event: EventBridgeCloudWatchAlarmEvent):
-    if event.detail.state.value == CloudWatchAlarmEventDetailStateValue.ALARM:
+def _build_slack_message(event: CloudWatchAlarmEvent):
+    if event.new_state_value == CloudWatchAlarmEventStateValue.ALARM:
         logger.debug("detected alarm state")
 
         return [
@@ -118,13 +155,13 @@ def _build_slack_message(event: EventBridgeCloudWatchAlarmEvent):
                 "type": "header",
                 "text": {
                     "type": "plain_text",
-                    "text": f"Alarm: {event.detail.alarm_name}",
+                    "text": f"Alarm: {event.alarm_name}",
                 },
             },
             {"type": "divider"},
             {
                 "type": "section",
-                "text": {"type": "mrkdwn", "text": f"{event.detail.state.reason}"},
+                "text": {"type": "mrkdwn", "text": f"{event.new_state_reason}"},
                 "accessory": {
                     "type": "image",
                     "image_url": "https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-large/1f6a8@2x.png",
@@ -137,19 +174,19 @@ def _build_slack_message(event: EventBridgeCloudWatchAlarmEvent):
                 "fields": [
                     {"type": "mrkdwn", "text": "*Account*"},
                     {"type": "mrkdwn", "text": "*Region*"},
-                    {"type": "mrkdwn", "text": f"`{event.account}`"},
+                    {"type": "mrkdwn", "text": f"`{event.aws_account_id}`"},
                     {"type": "mrkdwn", "text": f"`{event.region}`"},
-                    {"type": "mrkdwn", "text": "*ARNs*"},
+                    {"type": "mrkdwn", "text": "*ARN*"},
                     {"type": "mrkdwn", "text": "*Timestamp*"},
                     {
                         "type": "mrkdwn",
-                        "text": f"""`{", ".join(event.resources)}`""",
+                        "text": f"""`{event.alarm_arn}`""",
                     },
-                    {"type": "mrkdwn", "text": f"`{event.time}`"},
+                    {"type": "mrkdwn", "text": f"`{event.state_change_time}`"},
                 ],
             },
         ]
-    elif event.detail.state.value == CloudWatchAlarmEventDetailStateValue.OK:
+    elif event.new_state_value == CloudWatchAlarmEventStateValue.OK:
         logger.debug("detected ok state")
 
         return [
@@ -157,13 +194,13 @@ def _build_slack_message(event: EventBridgeCloudWatchAlarmEvent):
                 "type": "header",
                 "text": {
                     "type": "plain_text",
-                    "text": f"Resolved: {event.detail.alarm_name}",
+                    "text": f"Resolved: {event.alarm_name}",
                 },
             },
             {"type": "divider"},
             {
                 "type": "section",
-                "text": {"type": "mrkdwn", "text": f"{event.detail.state.reason}"},
+                "text": {"type": "mrkdwn", "text": f"{event.new_state_reason}"},
                 "accessory": {
                     "type": "image",
                     "image_url": "https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-large/1f389@2x.png",
@@ -176,22 +213,19 @@ def _build_slack_message(event: EventBridgeCloudWatchAlarmEvent):
                 "fields": [
                     {"type": "mrkdwn", "text": "*Account*"},
                     {"type": "mrkdwn", "text": "*Region*"},
-                    {"type": "mrkdwn", "text": f"`{event.account}`"},
+                    {"type": "mrkdwn", "text": f"`{event.aws_account_id}`"},
                     {"type": "mrkdwn", "text": f"`{event.region}`"},
-                    {"type": "mrkdwn", "text": "*ARNs*"},
+                    {"type": "mrkdwn", "text": "*ARN*"},
                     {"type": "mrkdwn", "text": "*Timestamp*"},
                     {
                         "type": "mrkdwn",
-                        "text": f"""`{", ".join(event.resources)}`""",
+                        "text": f"""`{event.alarm_arn}`""",
                     },
-                    {"type": "mrkdwn", "text": f"`{event.time}`"},
+                    {"type": "mrkdwn", "text": f"`{event.state_change_time}`"},
                 ],
             },
         ]
-    elif (
-        event.detail.state.value
-        == CloudWatchAlarmEventDetailStateValue.INSUFFICIENT_DATA
-    ):
+    elif event.new_state_value == CloudWatchAlarmEventStateValue.INSUFFICIENT_DATA:
         logger.debug("detected insufficient data state")
 
         return [
@@ -199,13 +233,13 @@ def _build_slack_message(event: EventBridgeCloudWatchAlarmEvent):
                 "type": "header",
                 "text": {
                     "type": "plain_text",
-                    "text": f"Insufficient data: {event.detail.alarm_name}",
+                    "text": f"Insufficient data: {event.alarm_name}",
                 },
             },
             {"type": "divider"},
             {
                 "type": "section",
-                "text": {"type": "mrkdwn", "text": f"{event.detail.state.reason}"},
+                "text": {"type": "mrkdwn", "text": f"{event.new_state_reason}"},
                 "accessory": {
                     "type": "image",
                     "image_url": "https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-large/2049-fe0f@2x.png",
@@ -218,22 +252,18 @@ def _build_slack_message(event: EventBridgeCloudWatchAlarmEvent):
                 "fields": [
                     {"type": "mrkdwn", "text": "*Account*"},
                     {"type": "mrkdwn", "text": "*Region*"},
-                    {"type": "mrkdwn", "text": f"`{event.account}`"},
+                    {"type": "mrkdwn", "text": f"`{event.aws_account_id}`"},
                     {"type": "mrkdwn", "text": f"`{event.region}`"},
-                    {"type": "mrkdwn", "text": "*ARNs*"},
+                    {"type": "mrkdwn", "text": "*ARN*"},
                     {"type": "mrkdwn", "text": "*Timestamp*"},
                     {
                         "type": "mrkdwn",
-                        "text": f"""`{", ".join(event.resources)}`""",
+                        "text": f"""`{event.alarm_arn}`""",
                     },
-                    {"type": "mrkdwn", "text": f"`{event.time}`"},
+                    {"type": "mrkdwn", "text": f"`{event.state_change_time}`"},
                 ],
             },
         ]
-    else:
-        logger.error("unknown alarm state", extra={"state": event.detail.state.value})
-
-        raise UnknownAlarmStateError(event.detail.state.value)
 
 
 @dataclasses.dataclass
@@ -272,7 +302,7 @@ def record_handler(
         event=aws_lambda_powertools.utilities.parser.parse(
             envelope=SqsSnsEnvelope,
             event=dict(record),
-            model=EventBridgeCloudWatchAlarmEvent,
+            model=CloudWatchAlarmEvent,
         )
     )
 
@@ -280,62 +310,62 @@ def record_handler(
 @aws_lambda_powertools.utilities.idempotency.idempotent_function(
     data_keyword_argument="event", config=config, persistence_store=dynamodb
 )
-def event_handler(event: EventBridgeCloudWatchAlarmEvent):
+def event_handler(event: CloudWatchAlarmEvent):
     slack_client = slack_sdk.WebClient(
         token=parameters.get_secret(os.getenv("SLACK_OAUTH_TOKEN_SECRET_ARN"))
     )
 
     slack_message = _build_slack_message(event)
 
-    logger.info("handling each event resource", extra={"resources": event.resources})
+    logger.info("handling event", extra={"event": event})
 
-    for resource in event.resources:
-        logger.info(
-            "retrieving slack information for alarm", extra={"resource": resource}
+    logger.info(
+        "retrieving slack information for alarm arn",
+        extra={"alarm_arn": event.alarm_arn},
+    )
+
+    models = list(AlarmSlackWebhookModel.query(hash_key=event.alarm_arn))
+
+    logger.info(
+        "retrieved slack information for alarm",
+        extra={"alarm_arn": event.alarm_arn, "models": models},
+    )
+
+    if len(models) == 0:
+        logger.warning(
+            "no slack channels defined for alarm",
+            extra={"alarm_arn": event.alarm_arn},
         )
 
-        models = list(AlarmSlackWebhookModel.query(resource))
+        return
 
+    for model in models:
         logger.info(
-            "retrieved slack information for alarm",
-            extra={"resource": resource, "models": models},
+            "sending alarm notification to slack channel",
+            extra={"slack_channel_id": model.slack_channel_id},
         )
 
-        if len(models) == 0:
-            logger.warning(
-                "no slack channels defined for alarm",
-                extra={"alarm_arn": resource},
+        response = slack_client.chat_postMessage(
+            blocks=slack_message, channel=model.slack_channel_id
+        )
+
+        try:
+            response.validate()
+        except slack_sdk.errors.SlackApiError:
+            logger.exception(
+                "sending alarm notification to slack channel failed",
+                extra={
+                    "slack_channel_id": model.slack_channel_id,
+                    "message": slack_message,
+                },
             )
 
-            continue
-
-        for model in models:
+            raise
+        else:
             logger.info(
-                "sending alarm notification to slack channel",
+                "sent alarm notification to slack channel",
                 extra={"slack_channel_id": model.slack_channel_id},
             )
-
-            response = slack_client.chat_postMessage(
-                blocks=slack_message, channel=model.slack_channel_id
-            )
-
-            try:
-                response.validate()
-            except slack_sdk.errors.SlackApiError:
-                logger.exception(
-                    "sending alarm notification to slack channel failed",
-                    extra={
-                        "slack_channel_id": model.slack_channel_id,
-                        "message": slack_message,
-                    },
-                )
-
-                raise
-            else:
-                logger.info(
-                    "sent alarm notification to slack channel",
-                    extra={"slack_channel_id": model.slack_channel_id},
-                )
 
 
 @tracer.capture_lambda_handler
