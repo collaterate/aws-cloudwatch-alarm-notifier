@@ -120,12 +120,15 @@ class AppConstruct(constructs.Construct):
             topic_name=namer.get_name("Topic"),
         )
 
-        self.alarm_notifier_topic.grant_publish(
-            aws_iam.ServicePrincipal(
-                service="cloudwatch.amazonaws.com",
+        self.alarm_notifier_topic.add_to_resource_policy(
+            statement=aws_iam.PolicyStatement(
+                actions=["sns:Publish"],
                 conditions={
                     "StringEquals": {"AWS:SourceOwner": aws_cdk.Stack.of(self).account}
                 },
+                effect=aws_iam.Effect.ALLOW,
+                principals=[aws_iam.ServicePrincipal("cloudwatch.amazonaws.com")],
+                resources=["*"],
             )
         )
 
