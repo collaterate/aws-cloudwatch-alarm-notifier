@@ -120,16 +120,11 @@ class AppConstruct(constructs.Construct):
             topic_name=namer.get_name("Topic"),
         )
 
-        principal = aws_iam.ServicePrincipal(
-            service="cloudwatch.amazonaws.com",
-            conditions={
-                "StringEquals": {"AWS:SourceOwner": aws_cdk.Stack.of(self).account}
-            },
-        )
+        principal = aws_iam.ServicePrincipal(service="cloudwatch.amazonaws.com")
 
         self.key_alias.add_to_resource_policy(
             statement=aws_iam.PolicyStatement(
-                actions=["kms:Decrypt", "kms:DescribeKey", "kms:GenerateDataKey*"],
+                actions=["kms:*"],
                 principals=[principal],
                 resources=["*"],
             )
