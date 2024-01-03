@@ -92,12 +92,20 @@ class DevStage(aws_cdk.Stage):
                     ],
                 ),
                 aws_iam.PolicyStatement(
+                    actions=["kms:Decrypt"],
+                    effect=aws_iam.Effect.DENY,
+                    not_resources=[
+                        "arn:aws:kms:us-east-1:800572224722:key/0dd0a066-0a63-4bce-8245-ccbb28cccc60"
+                    ],
+                ),
+                aws_iam.PolicyStatement(
                     not_actions=[
                         "ec2:CreateNetworkInterface",
                         "ec2:DescribeNetworkInterfaces",
                         "ec2:DeleteNetworkInterface",
                         "ec2:AssignPrivateIpAddresses",
                         "ec2:UnassignPrivateIpAddresses",
+                        "kms:Decrypt",
                         "secretsmanager:DescribeSecret",
                         "secretsmanager:GetSecretValue",
                     ],
