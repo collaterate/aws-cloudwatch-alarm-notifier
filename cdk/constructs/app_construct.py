@@ -127,7 +127,14 @@ class AppConstruct(constructs.Construct):
             },
         )
 
-        self.key_alias.grant_encrypt(principal)
+        self.key_alias.add_to_resource_policy(
+            statement=aws_iam.PolicyStatement(
+                actions=["kms:Decrypt", "kms:DescribeKey", "kms:GenerateDataKey"],
+                principals=[principal],
+                resources=["*"],
+            )
+        )
+
         self.alarm_notifier_topic.grant_publish(principal)
 
     def _create_dead_letter_queue(self, namer: tbg_cdk.IResourceNamer) -> None:
