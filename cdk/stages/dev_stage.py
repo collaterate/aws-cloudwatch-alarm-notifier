@@ -95,7 +95,8 @@ class DevStage(aws_cdk.Stage):
                     actions=["kms:Decrypt"],
                     effect=aws_iam.Effect.DENY,
                     not_resources=[
-                        "arn:aws:kms:us-east-1:800572224722:key/0dd0a066-0a63-4bce-8245-ccbb28cccc60"
+                        "arn:aws:kms:us-east-1:800572224722:key/0dd0a066-0a63-4bce-8245-ccbb28cccc60",
+                        self.stack.app.key.key_arn,
                     ],
                 ),
                 aws_iam.PolicyStatement(
