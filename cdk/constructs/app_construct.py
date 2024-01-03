@@ -129,7 +129,7 @@ class AppConstruct(constructs.Construct):
 
         self.key_alias.add_to_resource_policy(
             statement=aws_iam.PolicyStatement(
-                actions=["kms:Decrypt", "kms:DescribeKey", "kms:GenerateDataKey"],
+                actions=["kms:Decrypt", "kms:DescribeKey", "kms:GenerateDataKey*"],
                 principals=[principal],
                 resources=["*"],
             )
