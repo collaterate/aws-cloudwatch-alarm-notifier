@@ -16,7 +16,6 @@ import aws_lambda_powertools.utilities.typing
 import pydantic
 import pynamodb.attributes
 import pynamodb.models
-import pythonjsonlogger.jsonlogger
 import sentry_sdk
 import slack_sdk
 import slack_sdk.errors
@@ -50,11 +49,6 @@ dynamodb = aws_lambda_powertools.utilities.idempotency.DynamoDBPersistenceLayer(
 config = aws_lambda_powertools.utilities.idempotency.IdempotencyConfig(
     event_key_jmespath="id"
 )
-
-logging.getLogger("botocore").setLevel(logging.ERROR)
-logging.getLogger("urllib3").setLevel(logging.ERROR)
-logging.getLogger("sentry_sdk").setLevel(logging.DEBUG)
-logging.getLogger("pynamodb").setLevel(logging.ERROR)
 
 logger = logging.getLogger(__name__)
 
@@ -300,7 +294,11 @@ def record_handler(
     data_keyword_argument="event", config=config, persistence_store=dynamodb
 )
 def event_handler(event: CloudWatchAlarmEvent):
+    logger = logging.getLogger("slack")
+    logger.setLevel(logging.DEBUG)
+
     slack_client = slack_sdk.WebClient(
+        logger=logger,
         token=parameters.get_secret(os.getenv("SLACK_OAUTH_TOKEN_SECRET_ARN")),
     )
 
