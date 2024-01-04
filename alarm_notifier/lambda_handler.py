@@ -316,7 +316,10 @@ def event_handler(event: CloudWatchAlarmEvent):
 
     logger.info(
         "retrieved slack information for alarm",
-        extra={"alarm_arn": event.alarm_arn, "models": models},
+        extra={
+            "alarm_arn": event.alarm_arn,
+            "models": [model.serialize() for model in models],
+        },
     )
 
     if len(models) == 0:
