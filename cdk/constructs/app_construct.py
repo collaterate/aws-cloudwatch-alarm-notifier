@@ -197,7 +197,9 @@ class AppConstruct(constructs.Construct):
         )
 
         self.alarm_notification_function_security_group.connections.allow_to(
-            other=aws_ec2.Peer.prefix_list(self.slack_api_ips.prefix_list_id),
+            other=aws_ec2.Peer.prefix_list(
+                prefix_list_id=self.slack_api_ips.prefix_list_id
+            ),
             port_range=aws_ec2.Port.tcp(port=443),
             description="Allow connections to the Slack API servers.",
         )
@@ -208,6 +210,12 @@ class AppConstruct(constructs.Construct):
             ),
             port_range=aws_ec2.Port.tcp(port=443),
             description="Allow connections to the VPC endpoints.",
+        )
+
+        self.alarm_notification_function_security_group.connections.allow_to(
+            other=aws_ec2.Peer.prefix_list(prefix_list_id="pl-02cd2c6b"),
+            port_range=aws_ec2.Port.tcp(443),
+            description="Allow connections to the DynamoDB endpoint.",
         )
 
     def _create_function_idempotency_table(self, namer: tbg_cdk.IResourceNamer) -> None:
