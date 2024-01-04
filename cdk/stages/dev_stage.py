@@ -15,7 +15,7 @@ class DevStage(aws_cdk.Stage):
 
         namer = tbg_cdk.ResourceNamer(["Dev", "Prv", "UE1"])
 
-        with open("./slack-api.ips.json") as f:
+        with open("./slack-api-ips.json") as f:
             slack_api_ips = json.load(f)
 
         self.stack = cdk.stacks.application_stack.ApplicationStack(
