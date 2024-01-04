@@ -392,6 +392,7 @@ class AppConstruct(constructs.Construct):
             insights_version=aws_lambda.LambdaInsightsVersion.VERSION_1_0_229_0,
             role=self.alarm_notifier_role.without_policy_updates(),
             security_groups=[self.alarm_notification_function_security_group],
+            timeout=aws_cdk.Duration.seconds(30),
             vpc=vpc,
             vpc_subnets=aws_ec2.SubnetSelection(
                 subnet_type=aws_ec2.SubnetType.PRIVATE_WITH_EGRESS
