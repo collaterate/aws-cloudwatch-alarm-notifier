@@ -119,6 +119,7 @@ class DevStage(aws_cdk.Stage):
                         "kms:Decrypt",
                         "secretsmanager:DescribeSecret",
                         "secretsmanager:GetSecretValue",
+                        "dynamodb:*",  # Does not support ABAC currently
                     ],
                     conditions={
                         "StringNotEquals": {
