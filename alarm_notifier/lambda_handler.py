@@ -59,14 +59,19 @@ class CloudWatchAlarmEventStateValue(str, enum.Enum):
     INSUFFICIENT_DATA = "INSUFFICIENT_DATA"
 
 
+class CloudWatchAlarmEventDimension(pydantic.BaseModel):
+    Name: str
+    Value: str
+
+
 class CloudWatchAlarmEventTrigger(pydantic.BaseModel):
     metric_name: str = pydantic.Field(alias="MetricName")
     namespace: str = pydantic.Field(alias="Namespace")
     statistic_type: str = pydantic.Field(alias="StatisticType")
     statistic: str = pydantic.Field(alias="Statistic")
     unit: typing.Optional[str] = pydantic.Field(alias="Unit", default_factory=list)
-    dimensions: typing.Mapping[str, str] = pydantic.Field(
-        alias="Dimensions", default_factory=dict
+    dimensions: typing.Sequence[CloudWatchAlarmEventDimension] = pydantic.Field(
+        alias="Dimensions", default_factory=list
     )
     period: int = pydantic.Field(alias="Period")
     evaluation_periods: int = pydantic.Field(alias="EvaluationPeriods")
