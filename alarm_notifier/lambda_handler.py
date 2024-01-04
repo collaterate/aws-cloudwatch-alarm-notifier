@@ -315,7 +315,8 @@ def record_handler(
 )
 def event_handler(event: CloudWatchAlarmEvent):
     slack_client = slack_sdk.WebClient(
-        token=parameters.get_secret(os.getenv("SLACK_OAUTH_TOKEN_SECRET_ARN"))
+        timeout=2,
+        token=parameters.get_secret(os.getenv("SLACK_OAUTH_TOKEN_SECRET_ARN")),
     )
 
     slack_message = _build_slack_message(event)
