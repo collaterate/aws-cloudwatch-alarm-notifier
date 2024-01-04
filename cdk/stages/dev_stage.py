@@ -1,3 +1,5 @@
+import json
+
 import aws_cdk
 import cdk_nag
 import constructs
@@ -13,6 +15,9 @@ class DevStage(aws_cdk.Stage):
 
         namer = tbg_cdk.ResourceNamer(["Dev", "Prv", "UE1"])
 
+        with open("./slack-api.ips.json") as f:
+            slack_api_ips = json.load(f)
+
         self.stack = cdk.stacks.application_stack.ApplicationStack(
             scope=self,
             id="AlarmNotifier",
@@ -20,6 +25,7 @@ class DevStage(aws_cdk.Stage):
             sentry_dns_secret_complete_arn="arn:aws:secretsmanager:us-east-1:800572224722:secret:/Sentry/AlarmNotifier/Dsn-7qkInJ",
             sentry_env="dev",
             slack_alarm_notifier_oauth_token_secret_complete_arn="arn:aws:secretsmanager:us-east-1:800572224722:secret:/Slack/AWSCloudWatchAlarmNotifier/BotUserOAuthToken-529oMU",  # TODO create a unique token for this bot
+            slack_api_ips=slack_api_ips,
             stack_name=namer.get_name("AlarmNotifier"),
         )
 

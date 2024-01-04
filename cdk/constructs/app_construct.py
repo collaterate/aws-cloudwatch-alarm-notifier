@@ -1,3 +1,5 @@
+import typing
+
 import aws_cdk
 import cdk_nag
 import constructs
@@ -37,6 +39,7 @@ class AppConstruct(constructs.Construct):
         sentry_env: str,
         sentry_dns_secret_complete_arn: str,
         slack_alarm_notifier_oauth_token_secret_complete_arn: str,
+        slack_api_ips: typing.Sequence[str],
         vpc: aws_ec2.IVpc,
     ):
         super().__init__(scope=scope, id=id)
@@ -46,7 +49,9 @@ class AppConstruct(constructs.Construct):
         self._create_topic(namer=namer)
         self._create_dead_letter_queue(namer=namer)
         self._create_queue(namer=namer)
-        self._create_function_security_group(namer=namer, vpc=vpc)
+        self._create_function_security_group(
+            namer=namer, slack_api_ips=slack_api_ips, vpc=vpc
+        )
         self._create_function_idempotency_table(namer=namer)
         self._create_function_data_table(namer=namer)
         self._create_function_parameters_and_secrets(
@@ -163,7 +168,10 @@ class AppConstruct(constructs.Construct):
         )
 
     def _create_function_security_group(
-        self, namer: tbg_cdk.IResourceNamer, vpc: aws_ec2.IVpc
+        self,
+        namer: tbg_cdk.IResourceNamer,
+        slack_api_ips: typing.Sequence[str],
+        vpc: aws_ec2.IVpc,
     ) -> None:
         self.alarm_notification_function_security_group = aws_ec2.SecurityGroup(
             scope=self,
@@ -174,6 +182,23 @@ class AppConstruct(constructs.Construct):
                 "AlarmNotificationFunctionSecurityGroup"
             ),
             vpc=vpc,
+        )
+
+        self.slack_api_ips = aws_ec2.PrefixList(
+            scope=self,
+            id="SlackApiIps",
+            address_family=aws_ec2.AddressFamily.IP_V4,
+            entries=[
+                aws_ec2.CfnPrefixList.EntryProperty(cidr=f"{ip}/32")
+                for ip in slack_api_ips
+            ],
+            prefix_list_name=namer.get_name("SlackApiIps"),
+        )
+
+        self.alarm_notification_function_security_group.connections.allow_to(
+            other=aws_ec2.Peer.prefix_list(self.slack_api_ips.prefix_list_id),
+            port_range=aws_ec2.Port.tcp(port=443),
+            description="Allow connections to the Slack API servers.",
         )
 
     def _create_function_idempotency_table(self, namer: tbg_cdk.IResourceNamer) -> None:
