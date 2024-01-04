@@ -20,6 +20,7 @@ class ApplicationStack(aws_cdk.Stack):
         namer: tbg_cdk.IResourceNamer,
         sentry_dns_secret_complete_arn: str,
         sentry_env: str,
+        sentry_ingest_ips: typing.Sequence[str],
         slack_api_ips: typing.Sequence[str],
         slack_alarm_notifier_oauth_token_secret_complete_arn: str,
         **kwargs
@@ -36,6 +37,7 @@ class ApplicationStack(aws_cdk.Stack):
             namer=namer.with_prefix("App"),
             sentry_dns_secret_complete_arn=sentry_dns_secret_complete_arn,
             sentry_env=sentry_env,
+            sentry_ingest_ips=sentry_ingest_ips,
             slack_api_ips=slack_api_ips,
             slack_alarm_notifier_oauth_token_secret_complete_arn=slack_alarm_notifier_oauth_token_secret_complete_arn,
             vpc=vpc,

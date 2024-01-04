@@ -18,12 +18,16 @@ class ProdStage(aws_cdk.Stage):
         with open("./slack-api-ips.json") as f:
             slack_api_ips = json.load(f)
 
+        with open("./sentry-ingest-ips.json") as f:
+            sentry_ingest_ips = json.load(f)
+
         self.stack = cdk.stacks.application_stack.ApplicationStack(
             scope=self,
             id="AlarmNotifier",
             namer=namer.with_prefix("AlarmNotifier"),
             sentry_dns_secret_complete_arn="arn:aws:secretsmanager:us-east-1:538493872512:secret:/Sentry/AlarmNotifier/Dsn-Nqh9tx",
             sentry_env="prod",
+            sentry_ingest_ips=sentry_ingest_ips,
             slack_alarm_notifier_oauth_token_secret_complete_arn="arn:aws:secretsmanager:us-east-1:538493872512:secret:/Slack/AWSCloudWatchAlarmNotifier/BotUserOAuthToken-pOHP5y",
             slack_api_ips=slack_api_ips,
             stack_name=namer.get_name("AlarmNotifier"),

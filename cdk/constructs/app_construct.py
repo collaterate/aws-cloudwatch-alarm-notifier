@@ -37,6 +37,7 @@ class AppConstruct(constructs.Construct):
         namer: tbg_cdk.IResourceNamer,
         sentry_env: str,
         sentry_dns_secret_complete_arn: str,
+        sentry_ingest_ips: typing.Sequence[str],
         slack_alarm_notifier_oauth_token_secret_complete_arn: str,
         slack_api_ips: typing.Sequence[str],
         vpc: aws_ec2.IVpc,
@@ -49,7 +50,10 @@ class AppConstruct(constructs.Construct):
         self._create_dead_letter_queue(namer=namer)
         self._create_queue(namer=namer)
         self._create_function_security_group(
-            namer=namer, slack_api_ips=slack_api_ips, vpc=vpc
+            namer=namer,
+            sentry_ingest_ips=sentry_ingest_ips,
+            slack_api_ips=slack_api_ips,
+            vpc=vpc,
         )
         self._create_function_idempotency_table(namer=namer)
         self._create_function_data_table(namer=namer)
@@ -167,6 +171,7 @@ class AppConstruct(constructs.Construct):
     def _create_function_security_group(
         self,
         namer: tbg_cdk.IResourceNamer,
+        sentry_ingest_ips: typing.Sequence[str],
         slack_api_ips: typing.Sequence[str],
         vpc: aws_ec2.IVpc,
     ) -> None:
@@ -185,20 +190,20 @@ class AppConstruct(constructs.Construct):
             key="Name", value=namer.get_name("AlarmNotificationFunctionSecurityGroup")
         )
 
-        self.slack_api_ips = aws_ec2.PrefixList(
+        self.slack_api_ips_prefix_list = aws_ec2.PrefixList(
             scope=self,
-            id="SlackApiIps",
+            id="SlackApiIpsPrefixList",
             address_family=aws_ec2.AddressFamily.IP_V4,
             entries=[
                 aws_ec2.CfnPrefixList.EntryProperty(cidr=f"{ip}/32")
                 for ip in slack_api_ips
             ],
-            prefix_list_name=namer.get_name("SlackApiIps"),
+            prefix_list_name=namer.get_name("SlackApiIpsPrefixList"),
         )
 
         self.alarm_notification_function_security_group.connections.allow_to(
             other=aws_ec2.Peer.prefix_list(
-                prefix_list_id=self.slack_api_ips.prefix_list_id
+                prefix_list_id=self.slack_api_ips_prefix_list.prefix_list_id
             ),
             port_range=aws_ec2.Port.tcp(port=443),
             description="Allow connections to the Slack API servers.",
@@ -216,6 +221,17 @@ class AppConstruct(constructs.Construct):
             other=aws_ec2.Peer.prefix_list(prefix_list_id="pl-02cd2c6b"),
             port_range=aws_ec2.Port.tcp(443),
             description="Allow connections to the DynamoDB endpoint.",
+        )
+
+        self.sentry_ingest_ips_prefix_list = aws_ec2.PrefixList(
+            scope=self,
+            id="SentryIngestIpsPrefixList",
+            address_family=aws_ec2.AddressFamily.IP_V4,
+            entries=[
+                aws_ec2.CfnPrefixList.EntryProperty(cidr=f"{ip}/32")
+                for ip in sentry_ingest_ips
+            ],
+            prefix_list_name=namer.get_name("SentryIngestIpsPrefixList"),
         )
 
     def _create_function_idempotency_table(self, namer: tbg_cdk.IResourceNamer) -> None:
