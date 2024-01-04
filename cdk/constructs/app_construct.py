@@ -392,10 +392,10 @@ class AppConstruct(constructs.Construct):
                 "SLACK_OAUTH_TOKEN_SECRET_ARN": self.alarm_notification_slack_oauth_secret.secret_full_arn,
             },
             function_name=namer.get_name("Function"),
-            log_format=aws_lambda.LogFormat.JSON.value,  # function is expecting a string
+            log_format=aws_lambda.LogFormat.JSON.value,
             log_group=self.alarm_notifier_function_log_group,
-            system_log_level=aws_lambda.SystemLogLevel.DEBUG,
-            application_log_level=aws_lambda.ApplicationLogLevel.DEBUG,
+            system_log_level=aws_lambda.SystemLogLevel.DEBUG.value,
+            application_log_level=aws_lambda.ApplicationLogLevel.DEBUG.value,
             insights_version=aws_lambda.LambdaInsightsVersion.VERSION_1_0_229_0,
             role=self.alarm_notifier_role.without_policy_updates(),
             security_groups=[self.alarm_notification_function_security_group],
