@@ -97,6 +97,11 @@ class AppConstruct(constructs.Construct):
             aws_iam.ServicePrincipal(f"logs.{aws_cdk.Aws.REGION}.amazonaws.com")
         )
 
+        # Allow CloudWatch to use the encryption key, which is required for alarms to publish to SNS topics
+        self.key_alias.grant_encrypt_decrypt(
+            aws_iam.ServicePrincipal(service="cloudwatch.amazonaws.com")
+        )
+
         self.key.grant_encrypt_decrypt(
             self.alarm_notifier_function_execution_managed_policy
         )
@@ -124,17 +129,10 @@ class AppConstruct(constructs.Construct):
             topic_name=namer.get_name("Topic"),
         )
 
-        principal = aws_iam.ServicePrincipal(service="cloudwatch.amazonaws.com")
-
-        self.key_alias.add_to_resource_policy(
-            statement=aws_iam.PolicyStatement(
-                actions=["kms:*"],
-                principals=[principal],
-                resources=["*"],
-            )
+        # Allow CloudWatch to publish to the SNS topic
+        self.alarm_notifier_topic.grant_publish(
+            grantee=aws_iam.ServicePrincipal(service="cloudwatch.amazonaws.com")
         )
-
-        self.alarm_notifier_topic.grant_publish(principal)
 
     def _create_dead_letter_queue(self, namer: tbg_cdk.IResourceNamer) -> None:
         self.alarm_notifier_dead_letter_queue = aws_sqs.Queue(
