@@ -300,6 +300,7 @@ def record_handler(
 )
 def event_handler(event: CloudWatchAlarmEvent):
     slack_client = slack_sdk.WebClient(
+        timeout=10,
         token=parameters.get_secret(os.getenv("SLACK_OAUTH_TOKEN_SECRET_ARN")),
     )
 
