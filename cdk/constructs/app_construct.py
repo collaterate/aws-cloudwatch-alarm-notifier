@@ -18,7 +18,6 @@ from aws_cdk import (
     aws_secretsmanager,
     aws_sns_subscriptions,
 )
-from tbg_cdk import tbg_constructs
 
 
 class AppConstruct(constructs.Construct):
@@ -203,6 +202,14 @@ class AppConstruct(constructs.Construct):
             other=aws_ec2.Peer.prefix_list(self.slack_api_ips.prefix_list_id),
             port_range=aws_ec2.Port.tcp(port=443),
             description="Allow connections to the Slack API servers.",
+        )
+
+        self.alarm_notification_function_security_group.connections.allow_to(
+            other=aws_ec2.Peer.security_group_id(
+                security_group_id="sg-0a605696d8cbad464"
+            ),
+            port_range=aws_ec2.Port.tcp(port=443),
+            description="Allow connections to the VPC endpoints.",
         )
 
     def _create_function_idempotency_table(self, namer: tbg_cdk.IResourceNamer) -> None:
