@@ -394,6 +394,8 @@ class AppConstruct(constructs.Construct):
             function_name=namer.get_name("Function"),
             log_format=aws_lambda.LogFormat.JSON.value,  # function is expecting a string
             log_group=self.alarm_notifier_function_log_group,
+            system_log_level=aws_lambda.SystemLogLevel.DEBUG,
+            application_log_level=aws_lambda.ApplicationLogLevel.DEBUG,
             insights_version=aws_lambda.LambdaInsightsVersion.VERSION_1_0_229_0,
             role=self.alarm_notifier_role.without_policy_updates(),
             security_groups=[self.alarm_notification_function_security_group],
