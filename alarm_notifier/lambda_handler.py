@@ -51,25 +51,10 @@ config = aws_lambda_powertools.utilities.idempotency.IdempotencyConfig(
     event_key_jmespath="id"
 )
 
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(
-    pythonjsonlogger.jsonlogger.JsonFormatter(
-        "%(asctime)s %(funcName)s %(levelname)s %(lineno)d %(message)s %(name)s %(pathname)s",
-        rename_fields={
-            "levelname": "level",
-            "asctime": "timestamp",
-            "lineno": "line",
-            "funcName": "function",
-            "pathname": "path",
-        },
-    )
-)
-
-logging.basicConfig(handlers=[console_handler], level=logging.DEBUG, force=True)
-
 logging.getLogger("botocore").setLevel(logging.ERROR)
 logging.getLogger("urllib3").setLevel(logging.ERROR)
 logging.getLogger("sentry_sdk").setLevel(logging.DEBUG)
+logging.getLogger("pynamodb").setLevel(logging.ERROR)
 
 logger = logging.getLogger(__name__)
 
@@ -316,7 +301,6 @@ def record_handler(
 )
 def event_handler(event: CloudWatchAlarmEvent):
     slack_client = slack_sdk.WebClient(
-        timeout=2,
         token=parameters.get_secret(os.getenv("SLACK_OAUTH_TOKEN_SECRET_ARN")),
     )
 
