@@ -138,120 +138,129 @@ def _build_slack_message(event: CloudWatchAlarmEvent):
     if event.new_state_value == CloudWatchAlarmEventStateValue.ALARM:
         logger.debug("detected alarm state")
 
-        return [
-            {
-                "type": "header",
-                "text": {
-                    "type": "plain_text",
-                    "text": f"Alarm: {event.alarm_name}",
-                },
-            },
-            {"type": "divider"},
-            {
-                "type": "section",
-                "text": {"type": "mrkdwn", "text": f"{event.new_state_reason}"},
-                "accessory": {
-                    "type": "image",
-                    "image_url": "https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-large/1f6a8@2x.png",
-                    "alt_text": "Siren",
-                },
-            },
-            {"type": "divider"},
-            {
-                "type": "section",
-                "fields": [
-                    {"type": "mrkdwn", "text": "*Account*"},
-                    {"type": "mrkdwn", "text": "*Region*"},
-                    {"type": "mrkdwn", "text": f"`{event.aws_account_id}`"},
-                    {"type": "mrkdwn", "text": f"`{event.region}`"},
-                    {"type": "mrkdwn", "text": "*ARN*"},
-                    {"type": "mrkdwn", "text": "*Timestamp*"},
-                    {
-                        "type": "mrkdwn",
-                        "text": f"""`{event.alarm_arn}`""",
+        return {
+            "blocks": [
+                {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": f"Alarm: {event.alarm_name}",
                     },
-                    {"type": "mrkdwn", "text": f"`{event.state_change_time}`"},
-                ],
-            },
-        ]
+                },
+                {"type": "divider"},
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": f"{event.new_state_reason}"},
+                    "accessory": {
+                        "type": "image",
+                        "image_url": "https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-large/1f6a8@2x.png",
+                        "alt_text": "Siren",
+                    },
+                },
+                {"type": "divider"},
+                {
+                    "type": "section",
+                    "fields": [
+                        {"type": "mrkdwn", "text": "*Account*"},
+                        {"type": "mrkdwn", "text": "*Region*"},
+                        {"type": "mrkdwn", "text": f"`{event.aws_account_id}`"},
+                        {"type": "mrkdwn", "text": f"`{event.region}`"},
+                        {"type": "mrkdwn", "text": "*ARN*"},
+                        {"type": "mrkdwn", "text": "*Timestamp*"},
+                        {
+                            "type": "mrkdwn",
+                            "text": f"""`{event.alarm_arn}`""",
+                        },
+                        {"type": "mrkdwn", "text": f"`{event.state_change_time}`"},
+                    ],
+                },
+            ],
+            "text": f"Alarm: {event.alarm_name}",
+        }
     elif event.new_state_value == CloudWatchAlarmEventStateValue.OK:
         logger.debug("detected ok state")
 
-        return [
-            {
-                "type": "header",
-                "text": {
-                    "type": "plain_text",
-                    "text": f"Resolved: {event.alarm_name}",
-                },
-            },
-            {"type": "divider"},
-            {
-                "type": "section",
-                "text": {"type": "mrkdwn", "text": f"{event.new_state_reason}"},
-                "accessory": {
-                    "type": "image",
-                    "image_url": "https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-large/1f389@2x.png",
-                    "alt_text": "Tada",
-                },
-            },
-            {"type": "divider"},
-            {
-                "type": "section",
-                "fields": [
-                    {"type": "mrkdwn", "text": "*Account*"},
-                    {"type": "mrkdwn", "text": "*Region*"},
-                    {"type": "mrkdwn", "text": f"`{event.aws_account_id}`"},
-                    {"type": "mrkdwn", "text": f"`{event.region}`"},
-                    {"type": "mrkdwn", "text": "*ARN*"},
-                    {"type": "mrkdwn", "text": "*Timestamp*"},
-                    {
-                        "type": "mrkdwn",
-                        "text": f"""`{event.alarm_arn}`""",
+        return {
+            "blocks": [
+                {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": f"Resolved: {event.alarm_name}",
                     },
-                    {"type": "mrkdwn", "text": f"`{event.state_change_time}`"},
-                ],
-            },
-        ]
+                },
+                {"type": "divider"},
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": f"{event.new_state_reason}"},
+                    "accessory": {
+                        "type": "image",
+                        "image_url": "https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-large/1f389@2x.png",
+                        "alt_text": "Tada",
+                    },
+                },
+                {"type": "divider"},
+                {
+                    "type": "section",
+                    "fields": [
+                        {"type": "mrkdwn", "text": "*Account*"},
+                        {"type": "mrkdwn", "text": "*Region*"},
+                        {"type": "mrkdwn", "text": f"`{event.aws_account_id}`"},
+                        {"type": "mrkdwn", "text": f"`{event.region}`"},
+                        {"type": "mrkdwn", "text": "*ARN*"},
+                        {"type": "mrkdwn", "text": "*Timestamp*"},
+                        {
+                            "type": "mrkdwn",
+                            "text": f"""`{event.alarm_arn}`""",
+                        },
+                        {"type": "mrkdwn", "text": f"`{event.state_change_time}`"},
+                    ],
+                },
+            ],
+            "text": f"Resolved: {event.alarm_name}",
+        }
     elif event.new_state_value == CloudWatchAlarmEventStateValue.INSUFFICIENT_DATA:
         logger.debug("detected insufficient data state")
 
-        return [
-            {
-                "type": "header",
-                "text": {
-                    "type": "plain_text",
-                    "text": f"Insufficient data: {event.alarm_name}",
-                },
-            },
-            {"type": "divider"},
-            {
-                "type": "section",
-                "text": {"type": "mrkdwn", "text": f"{event.new_state_reason}"},
-                "accessory": {
-                    "type": "image",
-                    "image_url": "https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-large/2049-fe0f@2x.png",
-                    "alt_text": "Tada",
-                },
-            },
-            {"type": "divider"},
-            {
-                "type": "section",
-                "fields": [
-                    {"type": "mrkdwn", "text": "*Account*"},
-                    {"type": "mrkdwn", "text": "*Region*"},
-                    {"type": "mrkdwn", "text": f"`{event.aws_account_id}`"},
-                    {"type": "mrkdwn", "text": f"`{event.region}`"},
-                    {"type": "mrkdwn", "text": "*ARN*"},
-                    {"type": "mrkdwn", "text": "*Timestamp*"},
-                    {
-                        "type": "mrkdwn",
-                        "text": f"""`{event.alarm_arn}`""",
+        return {
+            "blocks": [
+                {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": f"Insufficient data: {event.alarm_name}",
                     },
-                    {"type": "mrkdwn", "text": f"`{event.state_change_time}`"},
-                ],
-            },
-        ]
+                },
+                {"type": "divider"},
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": f"{event.new_state_reason}"},
+                    "accessory": {
+                        "type": "image",
+                        "image_url": "https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-large/2049-fe0f@2x.png",
+                        "alt_text": "Tada",
+                    },
+                },
+                {"type": "divider"},
+                {
+                    "type": "section",
+                    "fields": [
+                        {"type": "mrkdwn", "text": "*Account*"},
+                        {"type": "mrkdwn", "text": "*Region*"},
+                        {"type": "mrkdwn", "text": f"`{event.aws_account_id}`"},
+                        {"type": "mrkdwn", "text": f"`{event.region}`"},
+                        {"type": "mrkdwn", "text": "*ARN*"},
+                        {"type": "mrkdwn", "text": "*Timestamp*"},
+                        {
+                            "type": "mrkdwn",
+                            "text": f"""`{event.alarm_arn}`""",
+                        },
+                        {"type": "mrkdwn", "text": f"`{event.state_change_time}`"},
+                    ],
+                },
+            ],
+            "text": f"Insufficient data: {event.alarm_name}",
+        }
 
 
 @dataclasses.dataclass
@@ -338,7 +347,7 @@ def event_handler(event: CloudWatchAlarmEvent):
         )
 
         response = slack_client.chat_postMessage(
-            blocks=slack_message, channel=model.slack_channel_id
+            channel=model.slack_channel_id, **slack_message
         )
 
         try:
