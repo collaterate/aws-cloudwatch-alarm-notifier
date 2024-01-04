@@ -176,12 +176,16 @@ class AppConstruct(constructs.Construct):
         self.alarm_notification_function_security_group = aws_ec2.SecurityGroup(
             scope=self,
             id="AlarmNotificationFunctionSecurityGroup",
-            allow_all_outbound=True,
+            allow_all_outbound=False,
             description="Alarm notification function security group.",
             security_group_name=namer.get_name(
                 "AlarmNotificationFunctionSecurityGroup"
             ),
             vpc=vpc,
+        )
+
+        aws_cdk.Tags.of(self.alarm_notification_function_security_group).add(
+            key="Name", value=namer.get_name("AlarmNotificationFunctionSecurityGroup")
         )
 
         self.slack_api_ips = aws_ec2.PrefixList(
