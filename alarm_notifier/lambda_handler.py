@@ -298,9 +298,9 @@ def event_handler(event: CloudWatchAlarmEvent):
         token=parameters.get_secret(os.getenv("SLACK_OAUTH_TOKEN_SECRET_ARN")),
     )
 
-    slack_message = _build_slack_message(event)
-
     logger.info("handling event", extra={"event": event})
+
+    slack_message = _build_slack_message(event)
 
     logger.info(
         "retrieving slack information for alarm arn",
