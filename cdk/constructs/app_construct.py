@@ -178,7 +178,7 @@ class AppConstruct(constructs.Construct):
         self.alarm_notification_function_security_group = aws_ec2.SecurityGroup(
             scope=self,
             id="AlarmNotificationFunctionSecurityGroup",
-            allow_all_outbound=False,
+            allow_all_outbound=True,  # Testing
             description="Alarm notification function security group.",
             security_group_name=namer.get_name(
                 "AlarmNotificationFunctionSecurityGroup"
