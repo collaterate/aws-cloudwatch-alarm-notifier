@@ -294,11 +294,7 @@ def record_handler(
     data_keyword_argument="event", config=config, persistence_store=dynamodb
 )
 def event_handler(event: CloudWatchAlarmEvent):
-    logger = logging.getLogger("slack")
-    logger.setLevel(logging.DEBUG)
-
     slack_client = slack_sdk.WebClient(
-        logger=logger,
         token=parameters.get_secret(os.getenv("SLACK_OAUTH_TOKEN_SECRET_ARN")),
     )
 
