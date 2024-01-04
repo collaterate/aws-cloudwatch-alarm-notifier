@@ -67,6 +67,9 @@ console_handler.setFormatter(
 
 logging.basicConfig(handlers=[console_handler], level=logging.DEBUG, force=True)
 
+logging.getLogger("botocore").setLevel(logging.ERROR)
+logging.getLogger("urllib3").setLevel(logging.ERROR)
+
 logger = logging.getLogger(__name__)
 
 
