@@ -8,6 +8,33 @@ import cdk.stacks.application_stack
 from cdk.aws_config import AwsConfig
 
 
+class ProdAlarmNotificationFunctionSecurityGroupFactory:
+    def create(
+        self,
+        scope: constructs.Construct,
+        id: str,
+        *,
+        namer: tbg_cdk.IResourceNamer,
+        vpc: aws_ec2.IVpc,
+    ) -> aws_ec2.ISecurityGroup:
+        sg = aws_ec2.SecurityGroup(
+            scope=scope,
+            id=id,
+            allow_all_outbound=True,
+            description="Alarm notification function security group.",
+            security_group_name=namer.get_name(
+                "AlarmNotificationFunctionSecurityGroup"
+            ),
+            vpc=vpc,
+        )
+
+        aws_cdk.Tags.of(sg).add(
+            key="Name", value=namer.get_name("AlarmNotificationFunctionSecurityGroup")
+        )
+
+        return sg
+
+
 class ProdStage(aws_cdk.Stage):
     def __init__(self, scope: constructs.Construct, id: str, **kwargs):
         super().__init__(scope=scope, id=id, **kwargs)
@@ -17,20 +44,11 @@ class ProdStage(aws_cdk.Stage):
         with open("./aws-config-prod.json") as f:
             aws_config = AwsConfig.model_validate_json(f.read())
 
-        self.vpc = aws_ec2.Vpc.from_lookup(
-            scope=self, id="Vpc", vpc_id=aws_config.vpc_id
-        )
-
-        self._create_function_security_group(
-            namer=namer,
-            vpc=self.vpc,
-        )
-
         self._create_stack(
             namer=namer,
             sentry_dsn_secret_arn=aws_config.sentry_dsn_secret_arn,
             slack_alarm_notifier_oauth_token_secret_complete_arn=aws_config.slack_alarm_notifier_oauth_token_secret_arn,
-            vpc=self.vpc,
+            vpc_id=aws_config.vpc_id,
         )
 
         self._create_permissions_boundary_managed_policy(
@@ -46,18 +64,18 @@ class ProdStage(aws_cdk.Stage):
         namer: tbg_cdk.IResourceNamer,
         sentry_dsn_secret_arn: str,
         slack_alarm_notifier_oauth_token_secret_complete_arn: str,
-        vpc: aws_ec2.IVpc,
+        vpc_id: str,
     ) -> None:
         self.stack = cdk.stacks.application_stack.ApplicationStack(
             scope=self,
             id="AlarmNotifier",
-            alarm_notification_function_security_group=self.alarm_notification_function_security_group,
+            alarm_notification_function_security_group_factory=ProdAlarmNotificationFunctionSecurityGroupFactory(),
             namer=namer.with_prefix("AlarmNotifier"),
             sentry_dns_secret_complete_arn=sentry_dsn_secret_arn,
             sentry_env="prod",
             slack_alarm_notifier_oauth_token_secret_complete_arn=slack_alarm_notifier_oauth_token_secret_complete_arn,
             stack_name=namer.get_name("AlarmNotifier"),
-            vpc=vpc,
+            vpc_id=vpc_id,
         )
 
     def _create_permissions_boundary_managed_policy(
@@ -174,24 +192,4 @@ class ProdStage(aws_cdk.Stage):
                     reason="Permission boundaries are allowed to use wildcards",
                 )
             ],
-        )
-
-    def _create_function_security_group(
-        self,
-        namer: tbg_cdk.IResourceNamer,
-        vpc: aws_ec2.IVpc,
-    ) -> None:
-        self.alarm_notification_function_security_group = aws_ec2.SecurityGroup(
-            scope=self,
-            id="AlarmNotificationFunctionSecurityGroup",
-            description="Alarm notification function security group.",
-            allow_all_outbound=True,
-            security_group_name=namer.get_name(
-                "AlarmNotificationFunctionSecurityGroup"
-            ),
-            vpc=vpc,
-        )
-
-        aws_cdk.Tags.of(self.alarm_notification_function_security_group).add(
-            key="Name", value=namer.get_name("AlarmNotificationFunctionSecurityGroup")
         )

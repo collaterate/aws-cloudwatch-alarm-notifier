@@ -1,5 +1,3 @@
-import typing
-
 import aws_cdk
 import cdk_nag
 import constructs
@@ -19,6 +17,8 @@ from aws_cdk import (
     aws_sns_subscriptions,
 )
 
+from cdk.stacks.application_stack import AlarmNotificationFunctionSecurityGroupFactory
+
 
 class AppConstruct(constructs.Construct):
     """
@@ -34,14 +34,16 @@ class AppConstruct(constructs.Construct):
         scope: constructs.Construct,
         id: str,
         *,
+        alarm_notification_function_security_group_factory: AlarmNotificationFunctionSecurityGroupFactory,
         namer: tbg_cdk.IResourceNamer,
         sentry_env: str,
         sentry_dns_secret_complete_arn: str,
         slack_alarm_notifier_oauth_token_secret_complete_arn: str,
-        vpc: aws_ec2.IVpc,
-        alarm_notification_function_security_group: aws_ec2.ISecurityGroup,
+        vpc_id: str,
     ):
         super().__init__(scope=scope, id=id)
+
+        self.vpc = aws_ec2.Vpc.from_lookup(scope=self, id="Vpc", vpc_id=vpc_id)
 
         self._create_role_and_managed_policy(namer=namer)
         self._create_kms_key(namer=namer)
@@ -59,8 +61,12 @@ class AppConstruct(constructs.Construct):
         self._create_function_log_group(namer=namer)
         self._create_function(
             namer=namer,
-            security_group=alarm_notification_function_security_group,
-            vpc=vpc,
+            security_group=alarm_notification_function_security_group_factory.create(
+                scope=self,
+                id="AlarmNotificationFunctionSecurityGroup",
+                namer=namer,
+                vpc=self.vpc,
+            ),
         )
 
     def _create_role_and_managed_policy(self, namer: tbg_cdk.IResourceNamer) -> None:
@@ -293,7 +299,6 @@ class AppConstruct(constructs.Construct):
         self,
         security_group: aws_ec2.ISecurityGroup,
         namer: tbg_cdk.IResourceNamer,
-        vpc: aws_ec2.IVpc,
     ) -> None:
         self.alarm_notifier_function_log_group.grant_write(
             self.alarm_notifier_function_execution_managed_policy
@@ -360,7 +365,7 @@ class AppConstruct(constructs.Construct):
             role=self.alarm_notifier_role.without_policy_updates(),
             security_groups=[security_group],
             timeout=aws_cdk.Duration.seconds(30),
-            vpc=vpc,
+            vpc=self.vpc,
             vpc_subnets=aws_ec2.SubnetSelection(
                 subnet_type=aws_ec2.SubnetType.PRIVATE_WITH_EGRESS
             ),

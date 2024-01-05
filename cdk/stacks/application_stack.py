@@ -11,31 +11,43 @@ from aws_cdk import aws_ec2
 import cdk.constructs.app_construct
 
 
+class AlarmNotificationFunctionSecurityGroupFactory(typing.Protocol):
+    def create(
+        self,
+        scope: constructs.Construct,
+        id: str,
+        *,
+        namer: tbg_cdk.IResourceNamer,
+        vpc: aws_ec2.IVpc,
+    ) -> aws_ec2.ISecurityGroup:
+        ...
+
+
 class ApplicationStack(aws_cdk.Stack):
     def __init__(
         self,
         scope: constructs.Construct,
         id: str,
         *,
-        alarm_notification_function_security_group: aws_ec2.ISecurityGroup,
+        alarm_notification_function_security_group_factory: AlarmNotificationFunctionSecurityGroupFactory,
         namer: tbg_cdk.IResourceNamer,
         sentry_dns_secret_complete_arn: str,
         sentry_env: str,
         slack_alarm_notifier_oauth_token_secret_complete_arn: str,
-        vpc: aws_ec2.IVpc,
-        **kwargs
+        vpc_id: str,
+        **kwargs,
     ):
         super().__init__(scope=scope, id=id, **kwargs)
 
         self.app = cdk.constructs.app_construct.AppConstruct(
             scope=self,
             id="App",
-            alarm_notification_function_security_group=alarm_notification_function_security_group,
+            alarm_notification_function_security_group_factory=alarm_notification_function_security_group_factory,
             namer=namer.with_prefix("App"),
             sentry_dns_secret_complete_arn=sentry_dns_secret_complete_arn,
             sentry_env=sentry_env,
             slack_alarm_notifier_oauth_token_secret_complete_arn=slack_alarm_notifier_oauth_token_secret_complete_arn,
-            vpc=vpc,
+            vpc_id=vpc_id,
         )
 
         aws_cdk.Aspects.of(self).add(
