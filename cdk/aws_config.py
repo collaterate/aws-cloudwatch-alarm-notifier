@@ -12,5 +12,5 @@ class AwsConfig(pydantic.BaseModel):
     )
     vpc_id: str = pydantic.Field(alias="vpc-id")
     vpc_endpoints_security_group_id: typing.Optional[str] = pydantic.Field(
-        alias="vpc-endpoints-security-group-id"
+        alias="vpc-endpoints-security-group-id", default=None
     )

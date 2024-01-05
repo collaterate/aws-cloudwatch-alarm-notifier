@@ -17,7 +17,9 @@ from aws_cdk import (
     aws_sns_subscriptions,
 )
 
-from cdk.stacks.application_stack import AlarmNotificationFunctionSecurityGroupFactory
+from cdk.constructs.alarm_notification_function_security_group_factory import (
+    AlarmNotificationFunctionSecurityGroupFactory,
+)
 
 
 class AppConstruct(constructs.Construct):

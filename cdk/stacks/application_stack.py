@@ -1,26 +1,15 @@
 import os
-import typing
 
 import aws_cdk
 import cdk_nag
 import constructs
 import tbg_cdk
 import tbg_cdk_nag
-from aws_cdk import aws_ec2
 
 import cdk.constructs.app_construct
-
-
-class AlarmNotificationFunctionSecurityGroupFactory(typing.Protocol):
-    def create(
-        self,
-        scope: constructs.Construct,
-        id: str,
-        *,
-        namer: tbg_cdk.IResourceNamer,
-        vpc: aws_ec2.IVpc,
-    ) -> aws_ec2.ISecurityGroup:
-        ...
+from cdk.constructs.alarm_notification_function_security_group_factory import (
+    AlarmNotificationFunctionSecurityGroupFactory,
+)
 
 
 class ApplicationStack(aws_cdk.Stack):

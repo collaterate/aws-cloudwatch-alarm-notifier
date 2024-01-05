@@ -111,10 +111,6 @@ class DevStage(aws_cdk.Stage):
         with open("./aws-config-dev.json") as f:
             aws_config = AwsConfig.model_validate_json(f.read())
 
-        self.vpc = aws_ec2.Vpc.from_lookup(
-            scope=self, id="Vpc", vpc_id=aws_config.vpc_id
-        )
-
         self._create_stack(
             dynamodb_prefix_list_id=aws_config.dynamodb_prefix_list_id,
             namer=namer,
@@ -122,7 +118,7 @@ class DevStage(aws_cdk.Stage):
             sentry_ingest_ips=sentry_ingest_ips,
             slack_alarm_notifier_oauth_token_secret_complete_arn=aws_config.slack_alarm_notifier_oauth_token_secret_arn,
             slack_api_ips=slack_api_ips,
-            vpc=self.vpc,
+            vpc_id=aws_config.vpc_id,
             vpc_endpoints_security_group_id=aws_config.vpc_endpoints_security_group_id,
         )
 
@@ -142,13 +138,13 @@ class DevStage(aws_cdk.Stage):
         sentry_ingest_ips: typing.Sequence[str],
         slack_alarm_notifier_oauth_token_secret_complete_arn: str,
         slack_api_ips: typing.Sequence[str],
-        vpc: aws_ec2.IVpc,
+        vpc_id: str,
         vpc_endpoints_security_group_id: str,
     ) -> None:
         self.stack = cdk.stacks.application_stack.ApplicationStack(
             scope=self,
             id="AlarmNotifier",
-            alarm_notification_function_security_group=DevAlarmNotificationFunctionSecurityGroupFactory(
+            alarm_notification_function_security_group_factory=DevAlarmNotificationFunctionSecurityGroupFactory(
                 dynamodb_prefix_list_id=dynamodb_prefix_list_id,
                 sentry_ingest_ips=sentry_ingest_ips,
                 slack_api_ips=slack_api_ips,
@@ -159,7 +155,7 @@ class DevStage(aws_cdk.Stage):
             sentry_env="dev",
             slack_alarm_notifier_oauth_token_secret_complete_arn=slack_alarm_notifier_oauth_token_secret_complete_arn,  # TODO create a unique token for this bot
             stack_name=namer.get_name("AlarmNotifier"),
-            vpc=vpc,
+            vpc_id=vpc_id,
         )
 
     def _create_permissions_boundary_managed_policy(
