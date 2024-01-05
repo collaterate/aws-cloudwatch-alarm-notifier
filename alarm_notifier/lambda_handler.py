@@ -147,10 +147,14 @@ def _build_slack_message(event: CloudWatchAlarmEvent):
                         "text": f"Alarm: {event.alarm_name}",
                     },
                 },
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": event.alarm_description},
+                },
                 {"type": "divider"},
                 {
                     "type": "section",
-                    "text": {"type": "mrkdwn", "text": f"{event.new_state_reason}"},
+                    "text": {"type": "mrkdwn", "text": event.new_state_reason},
                     "accessory": {
                         "type": "image",
                         "image_url": "https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-large/1f6a8@2x.png",
@@ -189,10 +193,14 @@ def _build_slack_message(event: CloudWatchAlarmEvent):
                         "text": f"Resolved: {event.alarm_name}",
                     },
                 },
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": event.alarm_description},
+                },
                 {"type": "divider"},
                 {
                     "type": "section",
-                    "text": {"type": "mrkdwn", "text": f"{event.new_state_reason}"},
+                    "text": {"type": "mrkdwn", "text": event.new_state_reason},
                     "accessory": {
                         "type": "image",
                         "image_url": "https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-large/1f389@2x.png",
@@ -231,10 +239,14 @@ def _build_slack_message(event: CloudWatchAlarmEvent):
                         "text": f"Insufficient data: {event.alarm_name}",
                     },
                 },
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": event.alarm_description},
+                },
                 {"type": "divider"},
                 {
                     "type": "section",
-                    "text": {"type": "mrkdwn", "text": f"{event.new_state_reason}"},
+                    "text": {"type": "mrkdwn", "text": event.new_state_reason},
                     "accessory": {
                         "type": "image",
                         "image_url": "https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-large/2049-fe0f@2x.png",
