@@ -17,28 +17,23 @@ class ApplicationStack(aws_cdk.Stack):
         scope: constructs.Construct,
         id: str,
         *,
+        alarm_notification_function_security_group: aws_ec2.ISecurityGroup,
         namer: tbg_cdk.IResourceNamer,
         sentry_dns_secret_complete_arn: str,
         sentry_env: str,
-        sentry_ingest_ips: typing.Sequence[str],
-        slack_api_ips: typing.Sequence[str],
         slack_alarm_notifier_oauth_token_secret_complete_arn: str,
+        vpc: aws_ec2.IVpc,
         **kwargs
     ):
         super().__init__(scope=scope, id=id, **kwargs)
 
-        vpc = aws_ec2.Vpc.from_lookup(
-            scope=self, id="Vpc", tags={"AccountResourceId": "Vpc"}
-        )
-
         self.app = cdk.constructs.app_construct.AppConstruct(
             scope=self,
             id="App",
+            alarm_notification_function_security_group=alarm_notification_function_security_group,
             namer=namer.with_prefix("App"),
             sentry_dns_secret_complete_arn=sentry_dns_secret_complete_arn,
             sentry_env=sentry_env,
-            sentry_ingest_ips=sentry_ingest_ips,
-            slack_api_ips=slack_api_ips,
             slack_alarm_notifier_oauth_token_secret_complete_arn=slack_alarm_notifier_oauth_token_secret_complete_arn,
             vpc=vpc,
         )

@@ -1,12 +1,14 @@
 import json
+import typing
 
 import aws_cdk
 import cdk_nag
 import constructs
 import tbg_cdk
-from aws_cdk import aws_iam
+from aws_cdk import aws_iam, aws_ec2
 
 import cdk.stacks.application_stack
+from cdk.aws_config import AwsConfig
 
 
 class DevStage(aws_cdk.Stage):
@@ -21,18 +23,59 @@ class DevStage(aws_cdk.Stage):
         with open("./sentry-ingest-ips.json") as f:
             sentry_ingest_ips = json.load(f)
 
+        with open("./aws-config-dev.json") as f:
+            aws_config = AwsConfig.model_validate_json(f.read())
+
+        self.vpc = aws_ec2.Vpc.from_lookup(
+            scope=self, id="Vpc", vpc_id=aws_config.vpc_id
+        )
+
+        self._create_function_security_group(
+            dynamodb_prefix_list_id=aws_config.dynamodb_prefix_list_id,
+            namer=namer,
+            sentry_ingest_ips=sentry_ingest_ips,
+            slack_api_ips=slack_api_ips,
+            vpc=self.vpc,
+            vpc_endpoints_security_group_id=aws_config.vpc_endpoints_security_group_id,
+        )
+
+        self._create_stack(
+            namer=namer,
+            sentry_dsn_secret_arn=aws_config.sentry_dsn_secret_arn,
+            slack_alarm_notifier_oauth_token_secret_complete_arn=aws_config.slack_alarm_notifier_oauth_token_secret_arn,
+            vpc=self.vpc,
+        )
+
+        self._create_permissions_boundary_managed_policy(
+            namer=namer, secrets_manager_key_arn=aws_config.secrets_manager_key_arn
+        )
+
+        aws_iam.PermissionsBoundary.of(self.stack).apply(self.permissions_boundary)
+
+        aws_cdk.Tags.of(self).add("Environment", "Development")
+
+    def _create_stack(
+        self,
+        namer: tbg_cdk.IResourceNamer,
+        sentry_dsn_secret_arn: str,
+        slack_alarm_notifier_oauth_token_secret_complete_arn: str,
+        vpc: aws_ec2.IVpc,
+    ) -> None:
         self.stack = cdk.stacks.application_stack.ApplicationStack(
             scope=self,
             id="AlarmNotifier",
+            alarm_notification_function_security_group=self.alarm_notification_function_security_group,
             namer=namer.with_prefix("AlarmNotifier"),
-            sentry_dns_secret_complete_arn="arn:aws:secretsmanager:us-east-1:800572224722:secret:/Sentry/AlarmNotifier/Dsn-7qkInJ",
+            sentry_dns_secret_complete_arn=sentry_dsn_secret_arn,
             sentry_env="dev",
-            sentry_ingest_ips=sentry_ingest_ips,
-            slack_alarm_notifier_oauth_token_secret_complete_arn="arn:aws:secretsmanager:us-east-1:800572224722:secret:/Slack/AWSCloudWatchAlarmNotifier/BotUserOAuthToken-529oMU",  # TODO create a unique token for this bot
-            slack_api_ips=slack_api_ips,
+            slack_alarm_notifier_oauth_token_secret_complete_arn=slack_alarm_notifier_oauth_token_secret_complete_arn,  # TODO create a unique token for this bot
             stack_name=namer.get_name("AlarmNotifier"),
+            vpc=vpc,
         )
 
+    def _create_permissions_boundary_managed_policy(
+        self, namer: tbg_cdk.IResourceNamer, secrets_manager_key_arn: str
+    ) -> None:
         self.permissions_boundary = aws_iam.ManagedPolicy(
             scope=self.stack,
             id="PermissionsBoundary",
@@ -105,7 +148,7 @@ class DevStage(aws_cdk.Stage):
                     actions=["kms:Decrypt"],
                     effect=aws_iam.Effect.DENY,
                     not_resources=[
-                        "arn:aws:kms:us-east-1:800572224722:key/0dd0a066-0a63-4bce-8245-ccbb28cccc60",
+                        secrets_manager_key_arn,
                         self.stack.app.key.key_arn,
                     ],
                 ),
@@ -149,6 +192,69 @@ class DevStage(aws_cdk.Stage):
             ],
         )
 
-        aws_iam.PermissionsBoundary.of(self.stack).apply(self.permissions_boundary)
+    def _create_function_security_group(
+        self,
+        dynamodb_prefix_list_id: str,
+        namer: tbg_cdk.IResourceNamer,
+        sentry_ingest_ips: typing.Sequence[str],
+        slack_api_ips: typing.Sequence[str],
+        vpc: aws_ec2.IVpc,
+        vpc_endpoints_security_group_id: str,
+    ) -> None:
+        self.alarm_notification_function_security_group = aws_ec2.SecurityGroup(
+            scope=self,
+            id="AlarmNotificationFunctionSecurityGroup",
+            description="Alarm notification function security group.",
+            security_group_name=namer.get_name(
+                "AlarmNotificationFunctionSecurityGroup"
+            ),
+            vpc=vpc,
+        )
 
-        aws_cdk.Tags.of(self).add("Environment", "Development")
+        aws_cdk.Tags.of(self.alarm_notification_function_security_group).add(
+            key="Name", value=namer.get_name("AlarmNotificationFunctionSecurityGroup")
+        )
+
+        self.slack_api_ips_prefix_list = aws_ec2.PrefixList(
+            scope=self,
+            id="SlackApiIpsPrefixList",
+            address_family=aws_ec2.AddressFamily.IP_V4,
+            entries=[
+                aws_ec2.CfnPrefixList.EntryProperty(cidr=f"{ip}/32")
+                for ip in slack_api_ips
+            ],
+            prefix_list_name=namer.get_name("SlackApiIpsPrefixList"),
+        )
+
+        self.alarm_notification_function_security_group.connections.allow_to(
+            other=aws_ec2.Peer.prefix_list(
+                prefix_list_id=self.slack_api_ips_prefix_list.prefix_list_id
+            ),
+            port_range=aws_ec2.Port.tcp(port=443),
+            description="Allow connections to the Slack API servers.",
+        )
+
+        self.alarm_notification_function_security_group.connections.allow_to(
+            other=aws_ec2.Peer.security_group_id(
+                security_group_id=vpc_endpoints_security_group_id
+            ),
+            port_range=aws_ec2.Port.tcp(port=443),
+            description="Allow connections to the VPC endpoints.",
+        )
+
+        self.alarm_notification_function_security_group.connections.allow_to(
+            other=aws_ec2.Peer.prefix_list(prefix_list_id=dynamodb_prefix_list_id),
+            port_range=aws_ec2.Port.tcp(443),
+            description="Allow connections to the DynamoDB endpoint.",
+        )
+
+        self.sentry_ingest_ips_prefix_list = aws_ec2.PrefixList(
+            scope=self,
+            id="SentryIngestIpsPrefixList",
+            address_family=aws_ec2.AddressFamily.IP_V4,
+            entries=[
+                aws_ec2.CfnPrefixList.EntryProperty(cidr=f"{ip}/32")
+                for ip in sentry_ingest_ips
+            ],
+            prefix_list_name=namer.get_name("SentryIngestIpsPrefixList"),
+        )

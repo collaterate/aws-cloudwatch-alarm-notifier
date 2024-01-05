@@ -37,10 +37,9 @@ class AppConstruct(constructs.Construct):
         namer: tbg_cdk.IResourceNamer,
         sentry_env: str,
         sentry_dns_secret_complete_arn: str,
-        sentry_ingest_ips: typing.Sequence[str],
         slack_alarm_notifier_oauth_token_secret_complete_arn: str,
-        slack_api_ips: typing.Sequence[str],
         vpc: aws_ec2.IVpc,
+        alarm_notification_function_security_group: aws_ec2.ISecurityGroup,
     ):
         super().__init__(scope=scope, id=id)
 
@@ -49,12 +48,6 @@ class AppConstruct(constructs.Construct):
         self._create_topic(namer=namer)
         self._create_dead_letter_queue(namer=namer)
         self._create_queue(namer=namer)
-        self._create_function_security_group(
-            namer=namer,
-            sentry_ingest_ips=sentry_ingest_ips,
-            slack_api_ips=slack_api_ips,
-            vpc=vpc,
-        )
         self._create_function_idempotency_table(namer=namer)
         self._create_function_data_table(namer=namer)
         self._create_function_parameters_and_secrets(
@@ -64,7 +57,11 @@ class AppConstruct(constructs.Construct):
             slack_alarm_notifier_oauth_token_secret_complete_arn=slack_alarm_notifier_oauth_token_secret_complete_arn,
         )
         self._create_function_log_group(namer=namer)
-        self._create_function(namer=namer, vpc=vpc)
+        self._create_function(
+            namer=namer,
+            security_group=alarm_notification_function_security_group,
+            vpc=vpc,
+        )
 
     def _create_role_and_managed_policy(self, namer: tbg_cdk.IResourceNamer) -> None:
         """Create the role and managed policy for the Alarm Notifier function"""
@@ -98,7 +95,9 @@ class AppConstruct(constructs.Construct):
         )
 
         self.key_alias.grant_encrypt_decrypt(
-            aws_iam.ServicePrincipal(f"logs.{aws_cdk.Aws.REGION}.amazonaws.com")
+            aws_iam.ServicePrincipal(
+                f"logs.{aws_cdk.Stack.of(self).region}.amazonaws.com"
+            )
         )
 
         # Allow CloudWatch to use the encryption key, which is required for alarms to publish to SNS topics
@@ -166,72 +165,6 @@ class AppConstruct(constructs.Construct):
                 dead_letter_queue=self.alarm_notifier_dead_letter_queue,
                 queue=self.alarm_notifier_queue,
             )
-        )
-
-    def _create_function_security_group(
-        self,
-        namer: tbg_cdk.IResourceNamer,
-        sentry_ingest_ips: typing.Sequence[str],
-        slack_api_ips: typing.Sequence[str],
-        vpc: aws_ec2.IVpc,
-    ) -> None:
-        self.alarm_notification_function_security_group = aws_ec2.SecurityGroup(
-            scope=self,
-            id="AlarmNotificationFunctionSecurityGroup",
-            # allow_all_outbound=True,  # All outbound is enabled to work around timeout with Slack API
-            description="Alarm notification function security group.",
-            security_group_name=namer.get_name(
-                "AlarmNotificationFunctionSecurityGroup"
-            ),
-            vpc=vpc,
-        )
-
-        aws_cdk.Tags.of(self.alarm_notification_function_security_group).add(
-            key="Name", value=namer.get_name("AlarmNotificationFunctionSecurityGroup")
-        )
-
-        self.slack_api_ips_prefix_list = aws_ec2.PrefixList(
-            scope=self,
-            id="SlackApiIpsPrefixList",
-            address_family=aws_ec2.AddressFamily.IP_V4,
-            entries=[
-                aws_ec2.CfnPrefixList.EntryProperty(cidr=f"{ip}/32")
-                for ip in slack_api_ips
-            ],
-            prefix_list_name=namer.get_name("SlackApiIpsPrefixList"),
-        )
-
-        self.alarm_notification_function_security_group.connections.allow_to(
-            other=aws_ec2.Peer.prefix_list(
-                prefix_list_id=self.slack_api_ips_prefix_list.prefix_list_id
-            ),
-            port_range=aws_ec2.Port.tcp(port=443),
-            description="Allow connections to the Slack API servers.",
-        )
-
-        self.alarm_notification_function_security_group.connections.allow_to(
-            other=aws_ec2.Peer.security_group_id(
-                security_group_id="sg-0a605696d8cbad464"
-            ),
-            port_range=aws_ec2.Port.tcp(port=443),
-            description="Allow connections to the VPC endpoints.",
-        )
-
-        self.alarm_notification_function_security_group.connections.allow_to(
-            other=aws_ec2.Peer.prefix_list(prefix_list_id="pl-02cd2c6b"),
-            port_range=aws_ec2.Port.tcp(443),
-            description="Allow connections to the DynamoDB endpoint.",
-        )
-
-        self.sentry_ingest_ips_prefix_list = aws_ec2.PrefixList(
-            scope=self,
-            id="SentryIngestIpsPrefixList",
-            address_family=aws_ec2.AddressFamily.IP_V4,
-            entries=[
-                aws_ec2.CfnPrefixList.EntryProperty(cidr=f"{ip}/32")
-                for ip in sentry_ingest_ips
-            ],
-            prefix_list_name=namer.get_name("SentryIngestIpsPrefixList"),
         )
 
     def _create_function_idempotency_table(self, namer: tbg_cdk.IResourceNamer) -> None:
@@ -357,7 +290,10 @@ class AppConstruct(constructs.Construct):
         )
 
     def _create_function(
-        self, namer: tbg_cdk.IResourceNamer, vpc: aws_ec2.IVpc
+        self,
+        security_group: aws_ec2.ISecurityGroup,
+        namer: tbg_cdk.IResourceNamer,
+        vpc: aws_ec2.IVpc,
     ) -> None:
         self.alarm_notifier_function_log_group.grant_write(
             self.alarm_notifier_function_execution_managed_policy
@@ -422,7 +358,7 @@ class AppConstruct(constructs.Construct):
             application_log_level=aws_lambda.ApplicationLogLevel.DEBUG.value,
             insights_version=aws_lambda.LambdaInsightsVersion.VERSION_1_0_229_0,
             role=self.alarm_notifier_role.without_policy_updates(),
-            security_groups=[self.alarm_notification_function_security_group],
+            security_groups=[security_group],
             timeout=aws_cdk.Duration.seconds(30),
             vpc=vpc,
             vpc_subnets=aws_ec2.SubnetSelection(
