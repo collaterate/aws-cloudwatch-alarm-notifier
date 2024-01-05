@@ -137,7 +137,7 @@ class BuildDevPipelineStack(aws_cdk.Stack):
                     "npm i",
                     "poetry config http-basic.tbg aws $(aws codeartifact get-authorization-token --duration-seconds 3600 --domain tbg --domain-owner 538493872512 --query authorizationToken --output text)",
                     "poetry install --no-root --without=dev",
-                    "npx cdk --context codeartifact_authorization_token=`aws codeartifact get-authorization-token --duration-seconds 3600 --domain tbg --domain-owner 538493872512 --query authorizationToken --output text` synth DevAlarmNotifierPipeline",
+                    "npx cdk --context codeartifact_authorization_token=`aws codeartifact get-authorization-token --duration-seconds 3600 --domain tbg --domain-owner 538493872512 --query authorizationToken --output text` synth AlarmNotifierPipeline",
                 ],
                 input=pipelines.CodePipelineSource.connection(
                     repo_string="collaterate/aws-cloudwatch-alarm-notifier",
