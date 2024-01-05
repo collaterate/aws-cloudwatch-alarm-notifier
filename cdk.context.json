@@ -128,5 +128,67 @@
         ]
       }
     ]
+  },
+  "vpc-provider:account=800572224722:filter.vpc-id=vpc-0806a6c2c2f2e5d81:region=us-east-1:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-0806a6c2c2f2e5d81",
+    "vpcCidrBlock": "10.142.0.0/19",
+    "ownerAccountId": "800572224722",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "PrivateApp",
+        "type": "Private",
+        "subnets": [
+          {
+            "subnetId": "subnet-0d3c28d4868848d6b",
+            "cidr": "10.142.2.0/24",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-04c2b50cbc5714353"
+          },
+          {
+            "subnetId": "subnet-05deb8d557e54c611",
+            "cidr": "10.142.3.0/24",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-05d439a7ff0148a37"
+          }
+        ]
+      },
+      {
+        "name": "Airgap",
+        "type": "Isolated",
+        "subnets": [
+          {
+            "subnetId": "subnet-0fc4f7343f3045584",
+            "cidr": "10.142.4.0/24",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-072a77756634a0eb3"
+          },
+          {
+            "subnetId": "subnet-032f25b648db6fabd",
+            "cidr": "10.142.5.0/24",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-08218cf12e26b0ddb"
+          }
+        ]
+      },
+      {
+        "name": "Dmz",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-055c6424393324cfa",
+            "cidr": "10.142.0.0/24",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-00d9f295450e7e122"
+          },
+          {
+            "subnetId": "subnet-02cba9b1a690eff10",
+            "cidr": "10.142.1.0/24",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-09bad44403b828714"
+          }
+        ]
+      }
+    ]
   }
 }
