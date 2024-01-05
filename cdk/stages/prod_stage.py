@@ -36,20 +36,14 @@ class ProdAlarmNotificationFunctionSecurityGroupFactory:
 
 
 class ProdStage(aws_cdk.Stage):
-    def __init__(self, scope: constructs.Construct, id: str, **kwargs):
+    def __init__(
+        self, scope: constructs.Construct, id: str, *, aws_config: AwsConfig, **kwargs
+    ):
         super().__init__(scope=scope, id=id, **kwargs)
 
         namer = tbg_cdk.ResourceNamer(["Prod", "Prv", "UE1"])
 
-        with open("./aws-config-prod.json") as f:
-            aws_config = AwsConfig.model_validate_json(f.read())
-
-        self._create_stack(
-            namer=namer,
-            sentry_dsn_secret_arn=aws_config.sentry_dsn_secret_arn,
-            slack_alarm_notifier_oauth_token_secret_complete_arn=aws_config.slack_alarm_notifier_oauth_token_secret_arn,
-            vpc_id=aws_config.vpc_id,
-        )
+        self._create_stack(namer=namer, aws_config=aws_config)
 
         self._create_permissions_boundary_managed_policy(
             namer=namer, secrets_manager_key_arn=aws_config.secrets_manager_key_arn
@@ -60,22 +54,18 @@ class ProdStage(aws_cdk.Stage):
         aws_cdk.Tags.of(self).add("Environment", "Production")
 
     def _create_stack(
-        self,
-        namer: tbg_cdk.IResourceNamer,
-        sentry_dsn_secret_arn: str,
-        slack_alarm_notifier_oauth_token_secret_complete_arn: str,
-        vpc_id: str,
+        self, namer: tbg_cdk.IResourceNamer, aws_config: AwsConfig
     ) -> None:
         self.stack = cdk.stacks.application_stack.ApplicationStack(
             scope=self,
             id="AlarmNotifier",
             alarm_notification_function_security_group_factory=ProdAlarmNotificationFunctionSecurityGroupFactory(),
             namer=namer.with_prefix("AlarmNotifier"),
-            sentry_dns_secret_complete_arn=sentry_dsn_secret_arn,
+            sentry_dns_secret_complete_arn=aws_config.sentry_dsn_secret_arn,
             sentry_env="prod",
-            slack_alarm_notifier_oauth_token_secret_complete_arn=slack_alarm_notifier_oauth_token_secret_complete_arn,
+            slack_alarm_notifier_oauth_token_secret_complete_arn=aws_config.slack_alarm_notifier_oauth_token_secret_arn,
             stack_name=namer.get_name("AlarmNotifier"),
-            vpc_id=vpc_id,
+            vpc_id=aws_config.vpc_id,
         )
 
     def _create_permissions_boundary_managed_policy(

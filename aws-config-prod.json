@@ -3,5 +3,7 @@
   "secrets-manager-key-arn": "arn:aws:kms:us-east-1:538493872512:key/ee800458-f0a9-493a-a1cf-ecb978bb3e33",
   "sentry-dns-secret-arn": "arn:aws:secretsmanager:us-east-1:538493872512:secret:/Sentry/AlarmNotifier/Dsn-Nqh9tx",
   "slack-alarm-notifier-oauth-token-secret-arn": "arn:aws:secretsmanager:us-east-1:538493872512:secret:/Slack/AWSCloudWatchAlarmNotifier/BotUserOAuthToken-pOHP5y",
+  "tbg-codartifact-domain-arn": "arn:aws:codeartifact:us-east-1:538493872512:domain/tbg",
+  "tbg-codeartifact-python-repository-arn": "arn:aws:codeartifact:us-east-1:538493872512:repository/tbg/python",
   "vpc-id": "vpc-fc492e9b"
 }

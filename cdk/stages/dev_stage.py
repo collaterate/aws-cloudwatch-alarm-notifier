@@ -97,33 +97,29 @@ class DevAlarmNotificationFunctionSecurityGroupFactory:
 
 
 class DevStage(aws_cdk.Stage):
-    def __init__(self, scope: constructs.Construct, id: str, **kwargs):
+    def __init__(
+        self,
+        scope: constructs.Construct,
+        id: str,
+        *,
+        aws_config: AwsConfig,
+        sentry_ingest_ips: typing.Sequence[str],
+        slack_api_ips: typing.Sequence[str],
+        **kwargs,
+    ):
         super().__init__(scope=scope, id=id, **kwargs)
 
         namer = tbg_cdk.ResourceNamer(["Dev", "Prv", "UE1"])
 
-        with open("./slack-api-ips.json") as f:
-            slack_api_ips = json.load(f)
-
-        with open("./sentry-ingest-ips.json") as f:
-            sentry_ingest_ips = json.load(f)
-
-        with open("./aws-config-dev.json") as f:
-            aws_config = AwsConfig.model_validate_json(f.read())
-
         self._create_stack(
-            dynamodb_prefix_list_id=aws_config.dynamodb_prefix_list_id,
+            aws_config=aws_config,
             namer=namer,
-            sentry_dsn_secret_arn=aws_config.sentry_dsn_secret_arn,
             sentry_ingest_ips=sentry_ingest_ips,
-            slack_alarm_notifier_oauth_token_secret_complete_arn=aws_config.slack_alarm_notifier_oauth_token_secret_arn,
             slack_api_ips=slack_api_ips,
-            vpc_id=aws_config.vpc_id,
-            vpc_endpoints_security_group_id=aws_config.vpc_endpoints_security_group_id,
         )
 
         self._create_permissions_boundary_managed_policy(
-            namer=namer, secrets_manager_key_arn=aws_config.secrets_manager_key_arn
+            aws_config=aws_config, namer=namer
         )
 
         aws_iam.PermissionsBoundary.of(self.stack).apply(self.permissions_boundary)
@@ -132,34 +128,30 @@ class DevStage(aws_cdk.Stage):
 
     def _create_stack(
         self,
-        dynamodb_prefix_list_id: str,
+        aws_config: AwsConfig,
         namer: tbg_cdk.IResourceNamer,
-        sentry_dsn_secret_arn: str,
         sentry_ingest_ips: typing.Sequence[str],
-        slack_alarm_notifier_oauth_token_secret_complete_arn: str,
         slack_api_ips: typing.Sequence[str],
-        vpc_id: str,
-        vpc_endpoints_security_group_id: str,
     ) -> None:
         self.stack = cdk.stacks.application_stack.ApplicationStack(
             scope=self,
             id="AlarmNotifier",
             alarm_notification_function_security_group_factory=DevAlarmNotificationFunctionSecurityGroupFactory(
-                dynamodb_prefix_list_id=dynamodb_prefix_list_id,
+                dynamodb_prefix_list_id=aws_config.dynamodb_prefix_list_id,
                 sentry_ingest_ips=sentry_ingest_ips,
                 slack_api_ips=slack_api_ips,
-                vpc_endpoints_security_group_id=vpc_endpoints_security_group_id,
+                vpc_endpoints_security_group_id=aws_config.vpc_endpoints_security_group_id,
             ),
             namer=namer.with_prefix("AlarmNotifier"),
-            sentry_dns_secret_complete_arn=sentry_dsn_secret_arn,
+            sentry_dns_secret_complete_arn=aws_config.sentry_dsn_secret_arn,
             sentry_env="dev",
-            slack_alarm_notifier_oauth_token_secret_complete_arn=slack_alarm_notifier_oauth_token_secret_complete_arn,  # TODO create a unique token for this bot
+            slack_alarm_notifier_oauth_token_secret_complete_arn=aws_config.slack_alarm_notifier_oauth_token_secret_complete_arn,  # TODO create a unique token for this bot
             stack_name=namer.get_name("AlarmNotifier"),
-            vpc_id=vpc_id,
+            vpc_id=aws_config.vpc_id,
         )
 
     def _create_permissions_boundary_managed_policy(
-        self, namer: tbg_cdk.IResourceNamer, secrets_manager_key_arn: str
+        self, aws_config: AwsConfig, namer: tbg_cdk.IResourceNamer
     ) -> None:
         self.permissions_boundary = aws_iam.ManagedPolicy(
             scope=self.stack,
@@ -233,7 +225,7 @@ class DevStage(aws_cdk.Stage):
                     actions=["kms:Decrypt"],
                     effect=aws_iam.Effect.DENY,
                     not_resources=[
-                        secrets_manager_key_arn,
+                        aws_config.secrets_manager_key_arn,
                         self.stack.app.key.key_arn,
                     ],
                 ),

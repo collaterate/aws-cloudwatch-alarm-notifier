@@ -1,5 +1,4 @@
 {
-  "app": "VERSION=`poetry version --short` poetry run python -m cdk.app",
   "watch": {
     "include": [
       "**"
