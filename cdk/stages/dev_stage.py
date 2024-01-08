@@ -111,10 +111,6 @@ class DevStage(aws_cdk.Stage):
 
         namer = tbg_cdk.ResourceNamer(["Dev", "Prv", "UE1"])
 
-        self._create_permissions_boundary_managed_policy(
-            aws_config=aws_config, namer=namer
-        )
-
         self._create_stack(
             aws_config=aws_config,
             namer=namer,
@@ -123,117 +119,6 @@ class DevStage(aws_cdk.Stage):
         )
 
         aws_cdk.Tags.of(self).add("Environment", "Development")
-
-    def _create_permissions_boundary_managed_policy(
-        self, aws_config: AwsConfig, namer: tbg_cdk.IResourceNamer
-    ) -> None:
-        self.permissions_boundary = aws_iam.ManagedPolicy(
-            scope=self,
-            id="PermissionsBoundary",
-            description="Permissions boundary for the alarm notifier stack",
-            managed_policy_name=namer.get_name("PermissionsBoundary"),
-            statements=[
-                aws_iam.PolicyStatement(
-                    actions=[
-                        "*",
-                    ],
-                    conditions={
-                        "StringEquals": {
-                            "aws:ResourceTag/ApplicationName": "Alarm Notifier",
-                            "aws:ResourceTag/Environment": "Development",
-                        }
-                    },
-                    effect=aws_iam.Effect.ALLOW,
-                    resources=["*"],
-                    sid="AllowApplicationSelfService",
-                ),
-                aws_iam.PolicyStatement(
-                    actions=[
-                        "ec2:AssignPrivateIpAddresses",
-                        "ec2:CreateNetworkInterface",
-                        "ec2:DeleteNetworkInterface",
-                        "ec2:DescribeNetworkInterfaces",
-                        "ec2:UnassignPrivateIpAddresses",
-                    ],
-                    effect=aws_iam.Effect.ALLOW,
-                    resources=["*"],
-                    sid="AllowLambdaVpc",
-                ),
-                aws_iam.PolicyStatement(
-                    actions=["dynamodb:*"],
-                    effect=aws_iam.Effect.ALLOW,
-                    resources=["*"],
-                    sid="AllowDynamoAccessBecauseItDoesNotSupportAbac",
-                ),
-                aws_iam.PolicyStatement(
-                    actions=[
-                        "secretsmanager:DescribeSecret",
-                        "secretsmanager:GetSecretValue",
-                    ],
-                    effect=aws_iam.Effect.ALLOW,
-                    resources=[
-                        aws_config.sentry_dsn_secret_arn,
-                        aws_config.slack_alarm_notifier_oauth_token_secret_arn,
-                    ],
-                    sid="AllowReadingSharedSecrets",
-                ),
-                aws_iam.PolicyStatement(
-                    actions=[
-                        "iam:CreateRole",
-                        "iam:CreateUser",
-                        "iam:PutRolePermissionsBoundary",
-                        "iam:PutUserPermissionsBoundary",
-                    ],
-                    conditions={
-                        "ArnNotEquals": {
-                            "iam:PermissionsBoundary": aws_cdk.Arn.format(
-                                components=aws_cdk.ArnComponents(
-                                    resource="policy",
-                                    service="iam",
-                                    resource_name=namer.get_name("PermissionsBoundary"),
-                                ),
-                                stack=self.stack,
-                            )
-                        }
-                    },
-                    effect=aws_iam.Effect.DENY,
-                    resources=["*"],
-                    sid="CreateOrChangeOnlyWithPermissionsBoundary",
-                ),
-                aws_iam.PolicyStatement(
-                    actions=[
-                        "iam:CreatePolicyVersion",
-                        "iam:DeletePolicy",
-                        "iam:DeletePolicyVersion",
-                        "iam:SetDefaultPolicyVersion",
-                    ],
-                    effect=aws_iam.Effect.DENY,
-                    resources=[
-                        aws_cdk.Arn.format(
-                            components=aws_cdk.ArnComponents(
-                                resource="policy",
-                                service="iam",
-                                region="",
-                                resource_name=namer.get_name("PermissionsBoundary"),
-                            ),
-                            stack=self.stack,
-                        )
-                    ],
-                    sid="NoPermissionBoundaryPolicyEdit",
-                ),
-            ],
-        )
-
-        cdk_nag.NagSuppressions.add_resource_suppressions(
-            construct=self.permissions_boundary,
-            suppressions=[
-                cdk_nag.NagPackSuppression(
-                    applies_to=["Action::*", "Resource::*"],
-                    id="AwsSolutions-IAM5",
-                    reason="Permission boundaries are allowed to use wildcards",
-                )
-            ],
-        )
 
     def _create_stack(
         self,
@@ -252,7 +137,6 @@ class DevStage(aws_cdk.Stage):
                 vpc_endpoints_security_group_id=aws_config.vpc_endpoints_security_group_id,
             ),
             namer=namer.with_prefix("AlarmNotifier"),
-            permissions_boundary=self.permissions_boundary,
             sentry_dns_secret_complete_arn=aws_config.sentry_dsn_secret_arn,
             sentry_env="dev",
             slack_alarm_notifier_oauth_token_secret_complete_arn=aws_config.slack_alarm_notifier_oauth_token_secret_arn,  # TODO create a unique token for this bot
