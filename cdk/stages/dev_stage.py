@@ -139,7 +139,7 @@ class DevStage(aws_cdk.Stage):
             namer=namer.with_prefix("AlarmNotifier"),
             sentry_dns_secret_complete_arn=aws_config.sentry_dsn_secret_arn,
             sentry_env="dev",
-            slack_alarm_notifier_oauth_token_secret_complete_arn=aws_config.slack_alarm_notifier_oauth_token_secret_complete_arn,  # TODO create a unique token for this bot
+            slack_alarm_notifier_oauth_token_secret_complete_arn=aws_config.slack_alarm_notifier_oauth_token_secret_arn,  # TODO create a unique token for this bot
             stack_name=namer.get_name("AlarmNotifier"),
             vpc_id=aws_config.vpc_id,
         )
